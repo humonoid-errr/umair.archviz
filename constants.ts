@@ -1,0 +1,107 @@
+import { Project } from './types';
+
+export const initialProjects: Project[] = [
+  {
+    id: 1,
+    name: 'Piano House',
+    imageUrl: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?q=80&w=2070&auto=format&fit=crop',
+    theme: 'dark',
+    galleryImages: [
+      // Landscape
+      'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2127&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1556912173-35f353759697?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=2071&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1615874959474-d609969a20ed?q=80&w=1932&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1598928636135-d146006ff4be?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1616594412290-fd97a943fc34?q=80&w=2070&auto=format&fit=crop',
+      // Portrait
+      'https://images.unsplash.com/photo-1588854337236-6889d631f385?q=80&w=1887&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1618221195710-dd6b41fa2047?q=80&w=1887&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600121848594-d8644e57abab?q=80&w=1887&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1611094603953-489d44c2f35e?q=80&w=1886&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1567016376408-0226e4d0c1ea?q=80&w=1887&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1631679706909-1844bbd07221?q=80&w=1887&auto=format&fit=crop',
+    ],
+  },
+  {
+    id: 2,
+    name: 'Mountain Cabin',
+    imageUrl: 'https://images.unsplash.com/photo-1559703248-dca74f19f815?q=80&w=1974&auto=format&fit=crop',
+    theme: 'dark',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1521783964925-5025d211027c?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1610121487915-a740883021f4?q=80&w=1974&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1534950462211-3bab7023253b?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1542359649-31e03cdde495?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1604598918323-1c429569622a?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1594411440618-9e5b3a32f623?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1599763784142-3e3c155f9a78?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1551525212-c13c75d86c83?q=80&w=2070&auto=format&fit=crop',
+    ],
+  },
+  {
+    id: 3,
+    name: 'Alpine Villa',
+    imageUrl: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1974&auto=format&fit=crop',
+    theme: 'dark',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1570129477492-45c003edd2be?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1613553425234-a80154941963?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1613553425219-5cca884da2ce?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?q=80&w=2070&auto=format&fit=crop',
+    ],
+  },
+  {
+    id: 4,
+    name: 'The Glass House',
+    imageUrl: 'https://images.unsplash.com/photo-1537726235470-8504e3b77c06?q=80&w=1974&auto=format&fit=crop',
+    theme: 'dark',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1604014237800-1c9102c219da?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1593902819383-299881373585?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1558036117-15d82a90b9b1?q=80&w=2070&auto=format&fit=crop',
+    ],
+  },
+  {
+    id: 5,
+    name: 'Bali Villa',
+    imageUrl: 'https://images.unsplash.com/photo-1585544733989-12a964f4b826?q=80&w=2070&auto=format&fit=crop',
+    theme: 'light',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1561501900-3701fa6a0864?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1610641818989-c2051b5e2cfd?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=1938&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1571888229994-77e8a4a28795?q=80&w=2074&auto=format&fit=crop',
+    ],
+  },
+  {
+    id: 6,
+    name: 'Neoclassical Elevation',
+    imageUrl: 'https://images.unsplash.com/photo-1617103995513-3e1178a1f647?q=80&w=1974&auto=format&fit=crop',
+    theme: 'light',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1617103995431-155716a7f143?q=80&w=1974&auto=format&fit=crop',
+    ],
+  },
+  {
+    id: 7,
+    name: 'Modern Minimalist Elevation',
+    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop',
+    theme: 'dark',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1600585152220-90363fe7e115?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2070&auto=format&fit=crop',
+    ],
+  },
+];

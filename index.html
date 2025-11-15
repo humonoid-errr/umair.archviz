@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>umair.archviz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+              serif: ['Georgia', 'Times New Roman', 'serif'],
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0.7' },
+                '100%': { opacity: '1' },
+              },
+              contentFadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              kenburns: {
+                '0%': {
+                  transform: 'scale(1) translate(0, 0)',
+                },
+                '100%': {
+                  transform: 'scale(1.1) translate(-1%, 1%)',
+                },
+              },
+            },
+            animation: {
+              fadeIn: 'fadeIn 1.5s ease-in-out',
+              contentFadeIn: 'contentFadeIn 0.75s ease-out',
+              kenburns: 'kenburns 15s ease-out infinite alternate-reverse',
+            },
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
