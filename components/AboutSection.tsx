@@ -23,7 +23,7 @@ const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
             </h2>
             <div className="w-full">
               <img
-                src="https://images.unsplash.com/photo-1588796144858-295b21a34a8a?q=80&w=1974&auto-format&fit=crop"
+                src="https://raw.githubusercontent.com/humonoid-errr/umair.archviz/refs/heads/main/mypic/Background.jpg"
                 alt="Modern interior with a view of sand dunes"
                 className="w-full h-full object-cover"
               />
