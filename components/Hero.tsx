@@ -17,25 +17,38 @@ const Hero: React.FC<HeroProps> = ({ image }) => {
   useEffect(() => {
     if (!image) return;
 
+    // For the very first image, just set it without a transition.
     if (!img1) {
       setImg1(image);
-      setShowImg1(true);
       return;
     }
     
     const currentVisibleUrl = showImg1 ? img1.imageUrl : img2?.imageUrl;
+    // Do nothing if the new image is already the one being displayed.
+    // This also prevents a loop after the transition completes.
     if (image.imageUrl === currentVisibleUrl) {
       return;
     }
 
-    if (showImg1) {
-      setImg2(image);
-    } else {
-      setImg1(image);
-    }
-    setShowImg1(prev => !prev);
+    // Preload the new image before updating state to ensure a smooth transition
+    const preloader = new Image();
+    preloader.src = image.imageUrl;
+
+    preloader.onload = () => {
+      // For subsequent images, load into the hidden slot and then toggle visibility.
+      if (showImg1) {
+        setImg2(image);
+      } else {
+        setImg1(image);
+      }
+      setShowImg1(prev => !prev);
+    };
+
+    preloader.onerror = () => {
+      console.error(`Failed to load hero image: ${image.imageUrl}`);
+    };
     
-  }, [image]);
+  }, [image, img1, img2, showImg1]);
 
   const activeImage = showImg1 ? img1 : img2;
 
