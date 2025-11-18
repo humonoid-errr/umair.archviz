@@ -8,7 +8,7 @@ export const initialProjects: Project[] = [
     theme: 'dark',
     galleryImages: [
       // Landscape
-      'https://raw.githubusercontent.com/humonoid-errr/umair.archviz/refs/heads/main/modern%20minimilist/1.jpg',
+      'https://drive.google.com/file/d/1tq10-0HmUVGaQGHodCdjXM6xq82lsoal/view?usp=sharing',
       'https://images.unsplash.com/photo-1556912173-35f353759697?q=80&w=2070&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=80&w=2070&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=2071&auto=format&fit=crop',
