@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
@@ -51,10 +51,14 @@ const App: React.FC = () => {
   }, []);
   
   const currentProject = projects.length > 0 ? projects[currentProjectIndex] : null;
-  const heroImage: RandomImage | null = currentProject ? {
+
+  const heroImage: RandomImage | null = useMemo(() => {
+    if (!currentProject) return null;
+    return {
       imageUrl: currentProject.imageUrl,
       projectName: currentProject.name,
-  } : null;
+    };
+  }, [currentProject]);
 
   const renderContent = () => {
     switch (currentPage) {
