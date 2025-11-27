@@ -17,11 +17,12 @@ const ProgressiveImage: React.FC<{
   src: string;
   alt: string;
   className?: string;
+  style?: React.CSSProperties;
   loading?: "eager" | "lazy";
   draggable?: boolean;
   onContextMenu?: (e: React.MouseEvent) => void;
   onLoad?: () => void;
-}> = ({ src, alt, className, loading, draggable, onContextMenu, onLoad }) => {
+}> = ({ src, alt, className, style, loading, draggable, onContextMenu, onLoad }) => {
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
   
@@ -44,7 +45,10 @@ const ProgressiveImage: React.FC<{
   }, [src, tinySrc, onLoad]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
+    <div 
+      className="relative w-full h-full overflow-hidden flex items-center justify-center"
+      style={style}
+    >
       {/* Background blur placeholder (visible until main image loads) */}
        <img
           src={tinySrc}
@@ -79,6 +83,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   const [canScrollRight, setCanScrollRight] = useState(false);
   
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Zoom and Pan State
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+  const lastPointerPos = useRef({ x: 0, y: 0 });
 
   // Use the defined order directly from the project data
   const galleryImages = project.galleryImages;
@@ -203,33 +213,45 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     }
   };
 
+  const resetZoom = useCallback(() => {
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+    isDragging.current = false;
+  }, []);
 
   const openFullscreen = (index: number) => {
+    resetZoom();
     setFullscreenIndex(index);
   };
 
   const closeFullscreen = useCallback(() => {
     setFullscreenIndex(null);
-  }, []);
+    resetZoom();
+  }, [resetZoom]);
 
   const goToNextImage = useCallback(() => {
     if (fullscreenIndex === null) return;
+    resetZoom();
     const isLastImage = fullscreenIndex === galleryImages.length - 1;
     setFullscreenIndex(isLastImage ? 0 : fullscreenIndex + 1);
-  }, [fullscreenIndex, galleryImages.length]);
+  }, [fullscreenIndex, galleryImages.length, resetZoom]);
 
   const goToPreviousImage = useCallback(() => {
     if (fullscreenIndex === null) return;
+    resetZoom();
     const isFirstImage = fullscreenIndex === 0;
     setFullscreenIndex(isFirstImage ? galleryImages.length - 1 : fullscreenIndex - 1);
-  }, [fullscreenIndex, galleryImages.length]);
+  }, [fullscreenIndex, galleryImages.length, resetZoom]);
   
   const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
+    // Only allow swipe nav if not zoomed in
+    if (zoomLevel === 1) {
+      setTouchStartX(e.touches[0].clientX);
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX === null) return;
+    if (touchStartX === null || zoomLevel > 1) return;
     const touchEndX = e.changedTouches[0].clientX;
     const deltaX = touchEndX - touchStartX;
     const swipeThreshold = 50; // pixels
@@ -240,6 +262,53 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
       goToNextImage();
     }
     setTouchStartX(null); // Reset for next swipe
+  };
+
+  // Zoom and Pan Handlers
+  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newZoom = parseFloat(e.target.value);
+    setZoomLevel(newZoom);
+    if (newZoom === 1) {
+      setPanPosition({ x: 0, y: 0 });
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (zoomLevel > 1) {
+      isDragging.current = true;
+      lastPointerPos.current = { x: e.clientX, y: e.clientY };
+      e.preventDefault(); // Prevent text selection/drag behavior
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (isDragging.current && zoomLevel > 1) {
+      const deltaX = e.clientX - lastPointerPos.current.x;
+      const deltaY = e.clientY - lastPointerPos.current.y;
+      
+      setPanPosition(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      lastPointerPos.current = { x: e.clientX, y: e.clientY };
+    }
+  };
+
+  const handlePointerUp = () => {
+    isDragging.current = false;
+  };
+
+  // Dynamic Image Sizing for Fullscreen Optimization
+  const getFullscreenImageSize = () => {
+    if (typeof window !== 'undefined') {
+      const width = window.innerWidth;
+      const pixelRatio = window.devicePixelRatio || 1;
+      const targetWidth = Math.round(width * pixelRatio);
+      // Cap at 2560px to avoid overkill, but ensure it's at least 1024 for quality
+      return Math.min(Math.max(targetWidth, 1024), 2560);
+    }
+    return 1600; // Default fallback
   };
 
   useEffect(() => {
@@ -272,6 +341,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
       if (fullscreenIndex === null) return;
       const { clientX } = event;
       const threshold = window.innerWidth / 3;
+      
+      // Hide arrows if zoomed in to prevent accidental clicks while panning
+      if (zoomLevel > 1) {
+        setActiveFullscreenArrow(null);
+        return;
+      }
 
       if (clientX < threshold) {
         setActiveFullscreenArrow('left');
@@ -298,7 +373,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
         currentRef.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
-  }, [fullscreenIndex]);
+  }, [fullscreenIndex, zoomLevel]);
 
   const handlePreviousClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -425,45 +500,67 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             <CloseIcon className="w-8 h-8" />
           </button>
           
-          <div className="relative w-full h-full" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={handlePreviousClick}
-              className={`absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
-              aria-label="Previous image"
-            >
-              <ChevronLeftIcon className="w-8 h-8 text-gray-800" />
-            </button>
+          <div className="relative w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {zoomLevel === 1 && (
+              <button
+                onClick={handlePreviousClick}
+                className={`absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
+                aria-label="Previous image"
+              >
+                <ChevronLeftIcon className="w-8 h-8 text-gray-800" />
+              </button>
+            )}
 
             <div
-              className="w-full h-full flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${fullscreenIndex * 100}%)` }}
+              className="w-full h-full flex items-center justify-center overflow-hidden touch-none"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              style={{ cursor: zoomLevel > 1 ? 'grab' : 'default' }}
             >
-              {galleryImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="w-full h-full flex-shrink-0 flex items-center justify-center p-8 md:p-16"
-                >
-                  <div className="max-w-full max-h-full w-full h-full flex items-center justify-center">
-                    <ProgressiveImage
-                        src={getOptimizedImage(image, 1600, 90)}
-                        alt={`${project.name} gallery image ${index + 1} fullscreen`}
-                        loading={Math.abs(index - fullscreenIndex) <= 1 ? "eager" : "lazy"}
-                        draggable={false}
-                        onContextMenu={(e) => e.preventDefault()}
-                        className="max-w-full max-h-full object-contain shadow-2xl"
-                    />
-                  </div>
+              {/* Only render the active image to maintain zoom state correctly */}
+               <div className="max-w-full max-h-full w-full h-full flex items-center justify-center">
+                  <ProgressiveImage
+                      src={getOptimizedImage(galleryImages[fullscreenIndex], getFullscreenImageSize(), 90)}
+                      alt={`${project.name} gallery image ${fullscreenIndex + 1} fullscreen`}
+                      loading="eager"
+                      draggable={false}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="max-w-full max-h-full object-contain shadow-2xl"
+                      style={{
+                        transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
+                        transition: isDragging.current ? 'none' : 'transform 0.1s ease-out',
+                        transformOrigin: 'center center'
+                      }}
+                  />
                 </div>
-              ))}
             </div>
 
-            <button
-              onClick={handleNextClick}
-              className={`absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
-              aria-label="Next image"
-            >
-              <ChevronRightIcon className="w-8 h-8 text-gray-800" />
-            </button>
+            {zoomLevel === 1 && (
+              <button
+                onClick={handleNextClick}
+                className={`absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
+                aria-label="Next image"
+              >
+                <ChevronRightIcon className="w-8 h-8 text-gray-800" />
+              </button>
+            )}
+            
+            {/* Horizontal Zoom Bar */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10" onClick={(e) => e.stopPropagation()}>
+               <span className="text-white text-xs font-medium">Zoom</span>
+               <input 
+                  type="range" 
+                  min="1" 
+                  max="3" 
+                  step="0.05" 
+                  value={zoomLevel} 
+                  onChange={handleZoomChange}
+                  className="w-32 md:w-48 h-1 bg-gray-500 rounded-lg appearance-none cursor-pointer accent-white hover:accent-gray-200"
+               />
+               <span className="text-white text-xs font-mono w-8 text-right">{Math.round(zoomLevel * 100)}%</span>
+            </div>
           </div>
         </div>
       )}
