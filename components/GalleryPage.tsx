@@ -251,9 +251,18 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX === null || zoomLevel > 1) return;
+    // If no swipe started, just return
+    if (touchStartX === null) return;
+    
+    const startX = touchStartX;
+    // Always reset touchStartX to ensure we don't hold onto stale state
+    setTouchStartX(null);
+
+    // If zoomed in, do not interpret as swipe
+    if (zoomLevel > 1) return;
+
     const touchEndX = e.changedTouches[0].clientX;
-    const deltaX = touchEndX - touchStartX;
+    const deltaX = touchEndX - startX;
     const swipeThreshold = 50; // pixels
 
     if (deltaX > swipeThreshold) {
@@ -261,7 +270,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     } else if (deltaX < -swipeThreshold) {
       goToNextImage();
     }
-    setTouchStartX(null); // Reset for next swipe
   };
 
   // Zoom and Pan Handlers
@@ -521,19 +529,21 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             >
               {/* Only render the active image to maintain zoom state correctly */}
                <div className="max-w-full max-h-full w-full h-full flex items-center justify-center">
-                  <ProgressiveImage
-                      src={getOptimizedImage(galleryImages[fullscreenIndex], getFullscreenImageSize(), 90)}
-                      alt={`${project.name} gallery image ${fullscreenIndex + 1} fullscreen`}
-                      loading="eager"
-                      draggable={false}
-                      onContextMenu={(e) => e.preventDefault()}
-                      className="max-w-full max-h-full object-contain shadow-2xl"
-                      style={{
-                        transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
-                        transition: isDragging.current ? 'none' : 'transform 0.1s ease-out',
-                        transformOrigin: 'center center'
-                      }}
-                  />
+                   <div className="flex items-center justify-center w-full h-full">
+                      <ProgressiveImage
+                          src={getOptimizedImage(galleryImages[fullscreenIndex], getFullscreenImageSize(), 90)}
+                          alt={`${project.name} gallery image ${fullscreenIndex + 1} fullscreen`}
+                          loading="eager"
+                          draggable={false}
+                          onContextMenu={(e) => e.preventDefault()}
+                          className="max-w-full max-h-full object-contain shadow-2xl"
+                          style={{
+                            transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
+                            transition: isDragging.current ? 'none' : 'transform 0.1s ease-out',
+                            transformOrigin: 'center center'
+                          }}
+                      />
+                  </div>
                 </div>
             </div>
 
@@ -548,7 +558,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             )}
             
             {/* Horizontal Zoom Bar */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10" 
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
                <span className="text-white text-xs font-medium">Zoom</span>
                <input 
                   type="range" 
