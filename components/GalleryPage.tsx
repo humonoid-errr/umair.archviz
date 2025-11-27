@@ -44,7 +44,7 @@ const ProgressiveImage: React.FC<{
   }, [src, tinySrc, onLoad]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
       {/* Background blur placeholder (visible until main image loads) */}
        <img
           src={tinySrc}
