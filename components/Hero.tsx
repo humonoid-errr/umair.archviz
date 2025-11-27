@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { RandomImage } from '../types';
 
@@ -68,13 +67,13 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
   const activeImage = showImg1 ? img1 : img2;
 
   if (!activeImage) {
-    return <main className="relative h-screen w-full overflow-hidden bg-black" />;
+    return <main className="relative h-[100dvh] w-full overflow-hidden bg-black" />;
   }
   
   const imageContainerClasses = "absolute inset-0 h-full w-full bg-cover bg-center transition-opacity duration-1000 ease-in-out";
 
   return (
-    <main className="relative h-screen w-full overflow-hidden bg-black group">
+    <main className="relative h-[100dvh] w-full overflow-hidden bg-black group">
       {img1 && (
         <div
           className={`${imageContainerClasses} ${showImg1 ? 'opacity-100' : 'opacity-0'}`}
