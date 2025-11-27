@@ -107,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
         <div className={`relative flex justify-between items-center ${getTextClasses()}`}>
           <button
             onClick={() => onNavigate('home')}
-            className="text-lg md:text-2xl font-light tracking-[0.3em] md:tracking-[0.5em] uppercase bg-transparent border-none p-0 text-left cursor-pointer hover:opacity-70 transition-opacity"
+            className="text-lg md:text-2xl font-light tracking-[0.3em] md:tracking-[0.5em] uppercase bg-transparent border-none p-0 text-left cursor-pointer origin-left transition-all duration-500 ease-out hover:tracking-[0.4em] md:hover:tracking-[0.6em]"
             aria-label="Go to home page"
           >
             MOHD UMAIR
