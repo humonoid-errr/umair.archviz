@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -132,7 +131,7 @@ const App: React.FC = () => {
     <>
       <CustomCursor />
       {currentPage === 'home' ? (
-        <div className="h-screen overflow-hidden bg-gray-800 text-white font-sans antialiased">
+        <div className="h-[100dvh] overflow-hidden bg-gray-800 text-white font-sans antialiased">
           <Header onNavigate={handleNavigate} page={currentPage} projects={projects} onSelectProject={handleSelectProject} />
           <Hero 
             image={currentHeroImage} 
