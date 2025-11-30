@@ -104,6 +104,7 @@ export const initialProjects: Project[] = [
     theme: 'light',
     galleryImages: [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/neo%20classical/1.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/neo%20classical/2.jpg',
     ],
   },
   {
@@ -115,7 +116,8 @@ export const initialProjects: Project[] = [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/1.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/2.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/3.jpg',
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/4.jpeg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/4.jpeg'
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/5.jpeg',
     ],
   },
 ];
