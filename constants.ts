@@ -110,7 +110,7 @@ export const initialProjects: Project[] = [
   {
     id: 7,
     name: 'Modern Minimalist Elevation',
-    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/1.jpg',
+    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/1.jpeg',
     theme: 'dark',
     galleryImages: [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/1.jpg',
