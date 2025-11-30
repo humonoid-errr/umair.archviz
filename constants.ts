@@ -104,7 +104,7 @@ export const initialProjects: Project[] = [
     theme: 'light',
     galleryImages: [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/neo%20classical/1.jpg',
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/neo%20classical/2.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/neo%20classical/2.jpeg',
     ],
   },
   {
