@@ -435,7 +435,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
               {galleryImages.map((image, index) => (
                 <div 
                   key={index} 
-                  className="relative group/image flex-shrink-0 snap-center w-auto h-full first:pl-16 last:pr-16 overflow-hidden flex items-center justify-center"
+                  className="relative group/image flex-shrink-0 snap-center w-auto h-full first:ml-16 last:mr-16 overflow-hidden flex items-center justify-center"
                 >
                   <div className="h-full w-auto transition-transform duration-100 ease-linear will-change-transform">
                       <ProgressiveImage
