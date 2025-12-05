@@ -218,7 +218,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
             </div>
             <div className="text-xs text-gray-500 font-light space-y-2 text-left">
                 <p><a href="tel:+918439144238" className="hover:underline">+91-84391-44238</a></p>
-                <p><a href="mailto:umairsaifi10@gmail.com" className="hover:underline">umairsaifi10@gmail.com</a></p>
+                <p><a href="mailto:hello@umair-archviz.work" className="hover:underline">hello@umair-archviz.work</a></p>
                 <p className="pt-2">Address: Available Worldwide</p>
             </div>
             <p className="text-xs text-gray-400 font-light mt-8 text-left tracking-wider">
