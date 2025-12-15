@@ -2,12 +2,32 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Google Search Console Verification -->
     <meta name="google-site-verification" content="dqzGnzFHUfh7WP-G6_laOsIlt8_XuLlo1ugmjz6vVXk" />
     <meta charset="UTF-8" />
-   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Google Tag Manager -->
+    <script>
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id=GTM-5GQB8MVZ'+dl;
+      f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-5GQB8MVZ');
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <!-- (Optional but recommended backup) -->
+    <!-- <link rel="icon" href="favicon.png" type="image/png"> -->
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>umair.archviz</title>
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
       tailwind.config = {
         theme: {
@@ -26,12 +46,8 @@
                 '100%': { opacity: '1', transform: 'translateY(0)' },
               },
               kenburns: {
-                '0%': {
-                  transform: 'scale(1) translate(0, 0)',
-                },
-                '100%': {
-                  transform: 'scale(1.1) translate(-1%, 1%)',
-                },
+                '0%': { transform: 'scale(1) translate(0, 0)' },
+                '100%': { transform: 'scale(1.1) translate(-1%, 1%)' },
               },
             },
             animation: {
@@ -43,84 +59,69 @@
         },
       }
     </script>
+
     <style>
-      /* Global Minimal Scrollbar */
       ::-webkit-scrollbar {
         width: 3px;
         height: 3px;
       }
-      
       ::-webkit-scrollbar-track {
         background: transparent;
       }
-      
       ::-webkit-scrollbar-thumb {
         background: rgba(0, 0, 0, 0.1);
         border-radius: 10px;
         transition: background 0.3s;
       }
-      
       ::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 0, 0, 0.3);
       }
-
       ::-webkit-scrollbar-button {
         display: none;
       }
-
-      /* Firefox Support */
       html {
         scrollbar-width: thin;
         scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
       }
-
-      /* Security / Content Protection Styles */
       img {
         -webkit-user-drag: none;
-        -khtml-user-drag: none;
-        -moz-user-drag: none;
-        -o-user-drag: none;
-        user-drag: none;
-        -webkit-touch-callout: none; /* Disable iOS long-press menu */
         user-select: none;
-        pointer-events: auto; /* Ensure clicks still work for navigation */
       }
-
-      /* Prevent text selection generally to discourage copying */
       body {
         -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
         user-select: none;
       }
-
-      /* Allow text selection in inputs and textareas */
       input, textarea {
-        -webkit-user-select: text;
-        -moz-user-select: text;
-        -ms-user-select: text;
         user-select: text;
       }
-
-      /* HIDE DEFAULT CURSOR on Desktop */
       @media (pointer: fine) {
         *, *::before, *::after {
           cursor: none !important;
         }
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+          "react/": "https://aistudiocdn.com/react@^19.2.0/",
+          "react": "https://aistudiocdn.com/react@^19.2.0"
+        }
+      }
+    </script>
+
+    <link rel="stylesheet" href="/index.css">
+  </head>
+
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5GQB8MVZ"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager -->
+
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
