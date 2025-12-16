@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -7,6 +8,7 @@ import ServicesSection from './components/ServicesSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import GalleryPage from './components/GalleryPage';
 import CustomCursor from './components/CustomCursor';
+import IntroOverlay from './components/IntroOverlay';
 import { initialProjects } from './constants';
 import { Project, RandomImage } from './types';
 import { initialAboutContent } from './constants/initialContent';
@@ -17,6 +19,7 @@ export type Page = 'home' | 'about' | 'services' | 'testimonials' | 'contact' | 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showIntro, setShowIntro] = useState(true);
   
   // Initialize with a random index based on the total number of images available in initialProjects
   // This ensures the landing page starts with a random image on every visit/refresh.
@@ -24,9 +27,44 @@ const App: React.FC = () => {
     const totalImages = initialProjects.reduce((acc, project) => acc + 1 + project.galleryImages.length, 0);
     return totalImages > 0 ? Math.floor(Math.random() * totalImages) : 0;
   });
+
+  // State to track the optimal image width based on screen size
+  const [heroImageWidth, setHeroImageWidth] = useState(1920);
   
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
+
+  // Optimize hero images based on screen size
+  useEffect(() => {
+    const calculateWidth = () => {
+      const width = window.innerWidth;
+      const dpr = window.devicePixelRatio || 1;
+      const physicalWidth = width * dpr;
+
+      // Determine optimal width bucket to maximize quality while managing bandwidth
+      if (physicalWidth <= 640) return 640;
+      if (physicalWidth <= 1080) return 1080;
+      if (physicalWidth <= 1920) return 1920;
+      if (physicalWidth <= 2560) return 2560;
+      return 3840; // 4K support
+    };
+
+    setHeroImageWidth(calculateWidth());
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setHeroImageWidth(calculateWidth());
+      }, 500); // Debounce to prevent rapid reloading
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   // Security: Disable Right Click, Inspector Shortcuts, Print, and Save
   useEffect(() => {
@@ -70,15 +108,15 @@ const App: React.FC = () => {
   const allHeroImages: RandomImage[] = useMemo(() => {
     return projects.flatMap(project => 
       [
-        // Optimize hero images for quality (1920px width)
-        { imageUrl: getOptimizedImage(project.imageUrl, 1920, 85), projectName: project.name },
+        // Optimize hero images dynamically based on calculated heroImageWidth
+        { imageUrl: getOptimizedImage(project.imageUrl, heroImageWidth, 85), projectName: project.name },
         ...project.galleryImages.map(galleryImg => ({
-          imageUrl: getOptimizedImage(galleryImg, 1920, 85),
+          imageUrl: getOptimizedImage(galleryImg, heroImageWidth, 85),
           projectName: project.name,
         })),
       ]
     );
-  }, [projects]);
+  }, [projects, heroImageWidth]);
 
   // Handler to pick a random image from the pool (Auto-play logic)
   // This is also used as the onSkip callback if an image is found to be portrait.
@@ -130,6 +168,7 @@ const App: React.FC = () => {
   return (
     <>
       <CustomCursor />
+      {showIntro && <IntroOverlay onComplete={() => setShowIntro(false)} />}
       {currentPage === 'home' ? (
         <div className="h-[100dvh] overflow-hidden bg-gray-800 text-white font-sans antialiased">
           <Header onNavigate={handleNavigate} page={currentPage} projects={projects} onSelectProject={handleSelectProject} />
