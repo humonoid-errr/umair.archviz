@@ -28,8 +28,8 @@ const services = [
   {
     title: "Space Planning",
     description: "Our expertise in space planning maximizes efficiency and flow within your space, optimizing layouts for both residential and commercial projects.",
-    icon: <SpacePlanningIcon className="w-full h-full" />
-    
+    icon: <SpacePlanningIcon className="w-full h-full" />  
+  }
   {
     title: "Rendering Service",
     description: "Enhancing 3D models with detailed design elements, materials, and lighting scenarios for vivid visualizations of your architectural projects.",
