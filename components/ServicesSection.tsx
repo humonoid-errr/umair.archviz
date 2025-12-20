@@ -4,7 +4,7 @@ import {
   InteriorDesignIcon, 
   ModellingIcon, 
   CommercialIcon, 
-  SpacePlanningIcon, 
+  PanoramaIcon, 
   RenderingIcon, 
   ProductVisIcon 
 } from './icons/ServiceIcons';
@@ -21,9 +21,9 @@ const services = [
     icon: <ModellingIcon className="w-full h-full" />
   },
   {
-    title: "Commercial Design",
-    description: "From retail stores to office buildings, we create innovative designs that enhance brand identity and customer experience.",
-    icon: <CommercialIcon className="w-full h-full" />
+    title: "360° Panoramas & Virtual Tours",
+    description: "Immerse yourself in your project before it's built. We create interactive virtual tours and panoramas that offer a complete spatial experience.",
+    icon: <PanoramaIcon className="w-full h-full" />
   },
   {
     title: "Space Planning",
