@@ -43,7 +43,7 @@ export const CommercialIcon: React.FC<IconProps> = ({ className }) => (
 );
 
 export const SpacePlanningIcon: React.FC<IconProps> = ({ className }) => (
-    <svg className={className} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg className={className} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2">
     <rect x="8" y="8" width="48" height="48" rx="2" />
     <path d="M8 20H56" />
     <path d="M24 20V56" />
@@ -52,7 +52,7 @@ export const SpacePlanningIcon: React.FC<IconProps> = ({ className }) => (
     <path d="M14 14L18 14" />
     <path d="M24 56V62" strokeWidth="3" />
     <path d="M56 56V62" strokeWidth="3" />
-      </svg>
+  </svg>
 );
 
 export const RenderingIcon: React.FC<IconProps> = ({ className }) => (
