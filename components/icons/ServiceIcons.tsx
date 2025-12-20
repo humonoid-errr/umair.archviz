@@ -42,14 +42,17 @@ export const CommercialIcon: React.FC<IconProps> = ({ className }) => (
   </svg>
 );
 
-export const PanoramaIcon: React.FC<IconProps> = ({ className }) => (
-  <svg className={className} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="32" cy="32" r="28" strokeDasharray="4 4" />
-    <ellipse cx="32" cy="32" rx="28" ry="12" />
-    <path d="M32 4V60" strokeDasharray="4 4" />
-    <circle cx="32" cy="32" r="6" fill="currentColor" />
-    <path d="M32 20C38.6274 20 44 25.3726 44 32C44 38.6274 38.6274 44 32 44C25.3726 44 20 38.6274 20 32C20 25.3726 25.3726 20 32 20Z" stroke="currentColor" strokeWidth="1" />
-  </svg>
+export const SpacePlanningIcon: React.FC<IconProps> = ({ className }) => (
+    <svg className={className} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="8" y="8" width="48" height="48" rx="2" />
+    <path d="M8 20H56" />
+    <path d="M24 20V56" />
+    <path d="M40 20V40H56" />
+    <path d="M48 8V20" />
+    <path d="M14 14L18 14" />
+    <path d="M24 56V62" strokeWidth="3" />
+    <path d="M56 56V62" strokeWidth="3" />
+      </svg>
 );
 
 export const RenderingIcon: React.FC<IconProps> = ({ className }) => (
