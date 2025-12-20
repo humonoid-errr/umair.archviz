@@ -4,8 +4,8 @@ import {
   InteriorDesignIcon, 
   ModellingIcon, 
   CommercialIcon, 
-  PanoramaIcon, 
-  RenderingIcon, 
+  SpacePlanningIcon, 
+   RenderingIcon, 
   ProductVisIcon 
 } from './icons/ServiceIcons';
 
@@ -26,10 +26,10 @@ const services = [
     icon: <CommercialIcon className="w-full h-full" />
   },
   {
-    title: "360° Panoramas & Virtual Tours",
-    description: "Immerse yourself in your project before it's built. We create interactive virtual tours and panoramas that offer a complete spatial experience.",
-    icon: <PanoramaIcon className="w-full h-full" />
-  },
+    title: "Space Planning",
+    description: "Our expertise in space planning maximizes efficiency and flow within your space, optimizing layouts for both residential and commercial projects.",
+    icon: <SpacePlanningIcon className="w-full h-full" />
+    
   {
     title: "Rendering Service",
     description: "Enhancing 3D models with detailed design elements, materials, and lighting scenarios for vivid visualizations of your architectural projects.",
@@ -46,16 +46,15 @@ const ServicesSection: React.FC = () => {
   return (
     <section id="services" className="min-h-screen w-full flex flex-col bg-white text-gray-800 px-8 md:px-24 pt-24 md:pt-32 pb-8">
       <div className="max-w-7xl mx-auto w-full flex-grow flex flex-col border-t border-gray-300 pt-10">
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-16 md:gap-y-24 mb-16">
           {services.map((service, index) => (
             <div 
               key={index} 
               className="flex flex-col items-start gap-6 group transition-transform duration-300 hover:-translate-y-2"
             >
-              <div className="w-12 h-12 md:w-14 md:h-14 text-gray-800 opacity-80 group-hover:opacity-100 transition-opacity duration-300 relative">
-                <div className="bg-orange-100/30 p-1 rounded-lg -ml-2 -mt-2 absolute w-12 h-12 -z-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                {service.icon}
+              <div className="w-12 h-12 md:w-14 md:h-14 text-gray-800 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                                {service.icon}
               </div>
               <h3 className="text-lg md:text-xl font-light uppercase tracking-widest text-gray-800">
                 {service.title}
