@@ -3,7 +3,7 @@ import {
   InteriorDesignIcon,
   ModellingIcon,
   CommercialIcon,
-  SpacePlanningIcon,
+  PanoramaIcon, 
   RenderingIcon,
   ProductVisIcon,
 } from "./icons/ServiceIcons";
@@ -34,10 +34,9 @@ const services: Service[] = [
     icon: <CommercialIcon className="w-full h-full" />,
   },
   {
-    title: "Space Planning",
-    description:
-      "Our expertise in space planning maximizes efficiency and flow within your space, optimizing layouts for both residential and commercial projects.",
-    icon: <SpacePlanningIcon className="w-full h-full" />,
+    title: "360° Panoramas & Virtual Tours",
+    description: "Immerse yourself in your project before it's built. We create interactive virtual tours and panoramas that offer a complete spatial experience.",
+    icon: <PanoramaIcon className="w-full h-full" />,
   },
   {
     title: "Rendering Service",
@@ -66,7 +65,7 @@ const ServicesSection: React.FC = () => {
               key={service.title}
               className="flex flex-col items-start gap-6 group transition-transform duration-300 hover:-translate-y-2"
             >
-              <div className="w-12 h-12 md:w-14 md:h-14 text-gray-800 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="w-12 h-12 md:w-14 md:h-14 text-gray-800 opacity-80 group-hover:opacity-100 transition-opacity duration-300 relative">
                 {service.icon}
               </div>
 
