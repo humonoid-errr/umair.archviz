@@ -8,6 +8,13 @@ import { ChevronRightIcon } from './icons/ChevronRightIcon';
 import { ChevronUpIcon } from './icons/ChevronUpIcon';
 import { getOptimizedImage } from '../utils/imageOptimizer';
 
+// Pannellum Type declaration for TS
+declare global {
+  interface Window {
+    pannellum: any;
+  }
+}
+
 interface GalleryPageProps {
   project: Project;
 }
@@ -90,6 +97,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   const isDragging = useRef(false);
   const lastPointerPos = useRef({ x: 0, y: 0 });
 
+  // 360 Viewer State
+  const pannellumViewerRef = useRef<any>(null);
+  const pannellumContainerRef = useRef<HTMLDivElement>(null);
+
   // Use the defined order directly from the project data
   const galleryImages = project.galleryImages;
 
@@ -141,8 +152,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     }
   }, [checkScrollability]);
 
-  // Parallax Effect Logic
+  // Parallax Effect Logic (Disabled for 360 as it's full equirectangular)
   useEffect(() => {
+    if (project.is360) return;
+    
     let animationFrameId: number;
 
     const updateParallax = () => {
@@ -156,19 +169,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
         const rect = img.getBoundingClientRect();
 
         if (isMobile) {
-          // Vertical Parallax for Mobile/Tablet/Landscape Mobile
-          // Only animate if the image is somewhat visible
           if (rect.bottom > 0 && rect.top < viewportHeight) {
             const center = rect.top + rect.height / 2;
             const viewportCenter = viewportHeight / 2;
             const dist = center - viewportCenter;
-            // Move image opposite to scroll direction
             const shift = dist * -0.1; 
             img.style.transform = `scale(1.1) translateY(${shift}px)`;
           }
         } else {
-          // Horizontal Parallax for Desktop
-          // Only animate if visible horizontally
           if (rect.right > 0 && rect.left < viewportWidth) {
             const center = rect.left + rect.width / 2;
             const viewportCenter = viewportWidth / 2;
@@ -189,17 +197,15 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [project]);
+  }, [project, project.is360]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     const el = scrollContainerRef.current;
     if (el) {
-      // Loop to start if clicking right at the end
       if (direction === 'right' && !canScrollRight) {
         el.scrollTo({ left: 0, behavior: 'smooth' });
         return;
       }
-      // Loop to end if clicking left at the start
       if (direction === 'left' && !canScrollLeft) {
         el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
         return;
@@ -225,6 +231,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   };
 
   const closeFullscreen = useCallback(() => {
+    if (pannellumViewerRef.current) {
+      pannellumViewerRef.current.destroy();
+      pannellumViewerRef.current = null;
+    }
     setFullscreenIndex(null);
     resetZoom();
   }, [resetZoom]);
@@ -244,27 +254,19 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   }, [fullscreenIndex, galleryImages.length, resetZoom]);
   
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Only allow swipe nav if not zoomed in
     if (zoomLevel === 1) {
       setTouchStartX(e.touches[0].clientX);
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    // If no swipe started, just return
     if (touchStartX === null) return;
-    
     const startX = touchStartX;
-    // Always reset touchStartX to ensure we don't hold onto stale state
     setTouchStartX(null);
-
-    // If zoomed in, do not interpret as swipe
     if (zoomLevel > 1) return;
-
     const touchEndX = e.changedTouches[0].clientX;
     const deltaX = touchEndX - startX;
-    const swipeThreshold = 50; // pixels
-
+    const swipeThreshold = 50;
     if (deltaX > swipeThreshold) {
       goToPreviousImage();
     } else if (deltaX < -swipeThreshold) {
@@ -272,33 +274,64 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     }
   };
 
-  // Zoom and Pan Handlers
+  // Zoom Handler for both 360 and standard
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newZoom = parseFloat(e.target.value);
     setZoomLevel(newZoom);
-    if (newZoom === 1) {
+    
+    if (project.is360 && pannellumViewerRef.current) {
+      // Map zoomLevel 1..3 to HFOV (Field of View)
+      // Standard HFOV is around 100. Zoomed in is smaller (e.g., 30).
+      // 100 -> 30 range
+      const hfov = 100 - (newZoom - 1) * 35; 
+      pannellumViewerRef.current.setHfov(hfov);
+    }
+
+    if (newZoom === 1 && !project.is360) {
       setPanPosition({ x: 0, y: 0 });
     }
   };
 
+  // 360 Initialization
+  useEffect(() => {
+    if (fullscreenIndex !== null && project.is360 && pannellumContainerRef.current) {
+      // Destroy previous if any
+      if (pannellumViewerRef.current) {
+        pannellumViewerRef.current.destroy();
+      }
+
+      // Initialize Pannellum
+      pannellumViewerRef.current = window.pannellum.viewer(pannellumContainerRef.current, {
+        type: 'equirectangular',
+        panorama: galleryImages[fullscreenIndex],
+        autoLoad: true,
+        showControls: false, // User wants custom zoom bar only
+        mouseZoom: false,    // Disable mouse scroll zoom
+        keyboardZoom: false, // Disable keyboard zoom
+        doubleClickZoom: false,
+        hfov: 100,
+        minHfov: 10,
+        maxHfov: 120,
+        draggable: true
+      });
+    }
+  }, [fullscreenIndex, project.is360, galleryImages]);
+
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (project.is360) return; // 360 uses its own internal dragging
     if (zoomLevel > 1) {
       isDragging.current = true;
       lastPointerPos.current = { x: e.clientX, y: e.clientY };
-      e.preventDefault(); // Prevent text selection/drag behavior
+      e.preventDefault();
     }
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    if (project.is360) return;
     if (isDragging.current && zoomLevel > 1) {
       const deltaX = e.clientX - lastPointerPos.current.x;
       const deltaY = e.clientY - lastPointerPos.current.y;
-      
-      setPanPosition(prev => ({
-        x: prev.x + deltaX,
-        y: prev.y + deltaY
-      }));
-      
+      setPanPosition(prev => ({ x: prev.x + deltaX, y: prev.y + deltaY }));
       lastPointerPos.current = { x: e.clientX, y: e.clientY };
     }
   };
@@ -307,16 +340,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     isDragging.current = false;
   };
 
-  // Dynamic Image Sizing for Fullscreen Optimization
   const getFullscreenImageSize = () => {
     if (typeof window !== 'undefined') {
       const width = window.innerWidth;
       const pixelRatio = window.devicePixelRatio || 1;
       const targetWidth = Math.round(width * pixelRatio);
-      // Cap at 2560px to avoid overkill, but ensure it's at least 1024 for quality
       return Math.min(Math.max(targetWidth, 1024), 2560);
     }
-    return 1600; // Default fallback
+    return 1600;
   };
 
   useEffect(() => {
@@ -350,7 +381,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
       const { clientX } = event;
       const threshold = window.innerWidth / 3;
       
-      // Hide arrows if zoomed in to prevent accidental clicks while panning
       if (zoomLevel > 1) {
         setActiveFullscreenArrow(null);
         return;
@@ -393,14 +423,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     goToNextImage();
   };
 
-  // Determine if arrows should show (if content overflows)
   const showArrows = canScrollLeft || canScrollRight;
 
   return (
     <>
       <section className="min-h-screen lg:h-screen w-full flex flex-col bg-white text-gray-800 pt-24 md:pt-32 overflow-x-hidden lg:overflow-y-hidden">
         
-        {/* Mobile/Tablet/Landscape Mobile: Vertical Grid */}
+        {/* Mobile: Vertical Grid */}
         <div className="flex-grow w-full px-8 pb-16 lg:hidden border-t border-gray-300 pt-10">
           <div className="grid grid-cols-1 gap-8">
             {galleryImages.map((image, index) => (
@@ -418,6 +447,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                     onContextMenu={(e) => e.preventDefault()}
                   />
                 </div>
+                {/* 360 Badge */}
+                {project.is360 && (
+                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-bold tracking-widest uppercase z-10 border border-white/20">
+                    360°
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                   <FullscreenIcon className="w-8 h-8 text-white" />
                 </div>
@@ -435,7 +470,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
               {galleryImages.map((image, index) => (
                 <div 
                   key={index} 
-                  className="relative group/image flex-shrink-0 snap-center w-auto h-full first:ml-16 last:mr-16 overflow-hidden flex items-center justify-center"
+                  className="relative group/image flex-shrink-0 snap-center w-auto h-full first:pl-16 last:pr-16 overflow-hidden flex items-center justify-center"
                 >
                   <div className="h-full w-auto transition-transform duration-100 ease-linear will-change-transform">
                       <ProgressiveImage
@@ -448,6 +483,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                         className="h-full w-auto object-contain"
                       />
                   </div>
+                   {/* 360 Badge */}
+                    {project.is360 && (
+                      <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-[11px] font-bold tracking-widest uppercase z-10 border border-white/20 opacity-0 group-hover/image:opacity-100 transition-opacity">
+                        360° Panorama
+                      </div>
+                    )}
                    <div
                       onClick={() => openFullscreen(index)}
                       className="absolute top-4 right-8 bg-white/50 backdrop-blur-sm p-3 rounded-full text-gray-800 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 hover:bg-white/80 cursor-pointer z-10"
@@ -502,7 +543,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
         >
           <button 
             onClick={closeFullscreen}
-            className="absolute top-6 right-6 text-gray-800 hover:opacity-70 transition-opacity z-50 p-2 hover:scale-110 active:scale-95"
+            className="absolute top-6 right-6 text-gray-800 hover:opacity-70 transition-opacity z-[60] p-2 hover:scale-110 active:scale-95"
             aria-label="Close fullscreen view"
           >
             <CloseIcon className="w-8 h-8" />
@@ -525,25 +566,28 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerUp}
-              style={{ cursor: zoomLevel > 1 ? 'grab' : 'default' }}
+              style={{ cursor: zoomLevel > 1 && !project.is360 ? 'grab' : 'default' }}
             >
-              {/* Only render the active image to maintain zoom state correctly */}
                <div className="max-w-full max-h-full w-full h-full flex items-center justify-center">
-                   <div className="flex items-center justify-center w-full h-full">
-                      <ProgressiveImage
-                          src={getOptimizedImage(galleryImages[fullscreenIndex], getFullscreenImageSize(), 90)}
-                          alt={`${project.name} gallery image ${fullscreenIndex + 1} fullscreen`}
-                          loading="eager"
-                          draggable={false}
-                          onContextMenu={(e) => e.preventDefault()}
-                          className="max-w-full max-h-full object-contain shadow-2xl"
-                          style={{
-                            transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
-                            transition: isDragging.current ? 'none' : 'transform 0.1s ease-out',
-                            transformOrigin: 'center center'
-                          }}
-                      />
-                  </div>
+                   {project.is360 ? (
+                      <div ref={pannellumContainerRef} className="w-full h-full bg-black" />
+                   ) : (
+                      <div className="flex items-center justify-center w-full h-full">
+                        <ProgressiveImage
+                            src={getOptimizedImage(galleryImages[fullscreenIndex], getFullscreenImageSize(), 90)}
+                            alt={`${project.name} gallery image ${fullscreenIndex + 1} fullscreen`}
+                            loading="eager"
+                            draggable={false}
+                            onContextMenu={(e) => e.preventDefault()}
+                            className="max-w-full max-h-full object-contain shadow-2xl"
+                            style={{
+                              transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
+                              transition: isDragging.current ? 'none' : 'transform 0.1s ease-out',
+                              transformOrigin: 'center center'
+                            }}
+                        />
+                      </div>
+                   )}
                 </div>
             </div>
 
