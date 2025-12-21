@@ -1,0 +1,37 @@
+#: locale=en
+
+## Action
+
+### URL
+WebFrame_1601F472_0755_A069_418B_FA4531346CED_mobile.url = album01/album.html
+
+## Media
+
+### Title
+panorama_0B95A329_070E_243B_4181_DC16F40FFAF1.label = Panorama(1)
+panorama_0C3C01F6_070E_6428_4198_98AB86F49766.label = Scene 42
+panorama_0C3C2059_070E_6418_4197_ECE4147C7478.label = Scene 43
+
+## Skin
+
+### Image
+Image_0262E73B_0D68_0F66_41A9_E61EB52ECC69_mobile.url = skin/Image_0262E73B_0D68_0F66_41A9_E61EB52ECC69_mobile_en.png
+Image_1525F5E3_0736_2C28_416F_0582B2471858_mobile.url = skin/Image_1525F5E3_0736_2C28_416F_0582B2471858_mobile_en.png
+Image_1526E375_0736_2428_4197_ACD4651C05E3_mobile.url = skin/Image_1526E375_0736_2428_4197_ACD4651C05E3_mobile_en.png
+Image_152A845C_0736_6C18_419A_FCE21BA158BC_mobile.url = skin/Image_152A845C_0736_6C18_419A_FCE21BA158BC_mobile_en.png
+Image_152BBAC9_0737_E478_4189_5588737E2F4E_mobile.url = skin/Image_152BBAC9_0737_E478_4189_5588737E2F4E_mobile_en.png
+Image_1562EC78_070E_1C18_4177_A70F1C7A8104.url = skin/Image_1562EC78_070E_1C18_4177_A70F1C7A8104_en.png
+Image_1562EC78_070E_1C18_4177_A70F1C7A8104_mobile.url = skin/Image_1562EC78_070E_1C18_4177_A70F1C7A8104_mobile_en.png
+Image_15A52807_0736_23E8_4197_B2E332E55819_mobile.url = skin/Image_15A52807_0736_23E8_4197_B2E332E55819_mobile_en.png
+Image_16F96C6E_070E_1C38_4195_0E15C66E50D4_mobile.url = skin/Image_16F96C6E_070E_1C38_4195_0E15C66E50D4_mobile_en.png
+Image_16FDB4E9_070E_6C38_4191_F1C8D18930A0_mobile.url = skin/Image_16FDB4E9_070E_6C38_4191_F1C8D18930A0_mobile_en.png
+
+### Tooltip
+Image_0262E73B_0D68_0F66_41A9_E61EB52ECC69_mobile.toolTip = Close Album Gallery
+
+## Tour
+
+### Description
+
+### Title
+tour.name = Untitled 3
