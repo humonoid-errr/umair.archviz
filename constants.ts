@@ -82,6 +82,18 @@ export const initialProjects: Project[] = [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/glass%20house/13.jpg',
     ],
   },
+   {
+    id: 8,
+    name: 'Sanskar Apartment 360',
+    imageUrl: 'https://github.com/humonoid-errr/umair.archviz/blob/main/portfolio/apartment%20sanskar',
+    theme: 'dark',
+    is360: true,
+    galleryImages: [
+      'https://github.com/humonoid-errr/umair.archviz/blob/main/portfolio/apartment%20sanskar/1.jpg',
+      'https://github.com/humonoid-errr/umair.archviz/blob/main/portfolio/apartment%20sanskar/2.jpg',
+      'https://github.com/humonoid-errr/umair.archviz/blob/main/portfolio/apartment%20sanskar/3.jpg',
+    ],
+  },
   {
     id: 5,
     name: 'Bali Villa',
