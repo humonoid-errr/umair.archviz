@@ -82,16 +82,15 @@ export const initialProjects: Project[] = [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/glass%20house/13.jpg',
     ],
   },
-   {
-    id: 8,
-    name: 'Sanskar Apartment 360',
-    imageUrl: 'https://github.com/humonoid-errr/umair.archviz/blob/main/portfolio/apartment%20sanskar',
-    theme: 'dark',
-    is360: true,
+  {
+    id: 9,
+    name: 'Apartment Sans Kar',
+    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/1.jpg',
+    theme: 'light',
     galleryImages: [
-      'https://github.com/humonoid-errr/umair.archviz/blob/main/portfolio/apartment%20sanskar/1.jpg',
-      'https://github.com/humonoid-errr/umair.archviz/blob/main/portfolio/apartment%20sanskar/2.jpg',
-      'https://github.com/humonoid-errr/umair.archviz/blob/main/portfolio/apartment%20sanskar/3.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/1.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/2.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/3.jpg',
     ],
   },
   {
