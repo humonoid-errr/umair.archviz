@@ -84,7 +84,7 @@ export const initialProjects: Project[] = [
   },
   {
     id: 9,
-    name: 'Apartment Sans Kar',
+    name: 'Apartment SansKar',
     imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/1.jpg',
     theme: 'light',
     galleryImages: [
