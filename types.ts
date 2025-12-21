@@ -5,6 +5,7 @@ export interface Project {
   imageUrl: string;
   theme: 'light' | 'dark';
   galleryImages: string[];
+  is360?: boolean;
 }
 
 export interface RandomImage {

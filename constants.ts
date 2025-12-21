@@ -83,6 +83,17 @@ export const initialProjects: Project[] = [
     ],
   },
   {
+    id: 9,
+    name: 'Apartment SansKar',
+    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/1.jpg',
+    theme: 'light',
+    galleryImages: [
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/1.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/2.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sans%20kar/3.jpg',
+    ],
+  },
+  {
     id: 5,
     name: 'Bali Villa',
     imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/bali%20villa/1.jpg',
