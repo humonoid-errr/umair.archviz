@@ -32,7 +32,6 @@ const ProgressiveImage: React.FC<{
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
   
-  // For standard images, we use optimized thumbs. For 360 detection, getOptimizedImage returns raw.
   const is360 = isImageUrl360(src);
   const thumbSrc = is360 ? getRawAssetUrl(src) : getOptimizedImage(src, 40, 20);
 
@@ -96,11 +95,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
 
   const galleryImages = project.galleryImages;
 
-  // Check if the current visible image is a 360 panorama
   const isCurrentIndex360 = useCallback((index: number | null) => {
     if (index === null) return false;
     const url = galleryImages[index];
-    // Future proof: Detect via project flag OR filename keywords
     return project.is360 || isImageUrl360(url);
   }, [project.is360, galleryImages]);
 
@@ -146,7 +143,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   }, [checkScrollability]);
 
   useEffect(() => {
-    // Standard parallax effect
     let animationFrameId: number;
     const updateParallax = () => {
       const isMobile = window.innerWidth < 1024;
@@ -247,26 +243,27 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     }
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    if (!is360Active) return;
-    // Pannellum handles its own wheel internally with mouseZoom: true
-  };
-
   // Sync Slider with Pannellum mouse-wheel zoom
   useEffect(() => {
     if (is360Active && pannellumViewerRef.current) {
       const syncInterval = setInterval(() => {
         if (pannellumViewerRef.current) {
-          const currentHfov = pannellumViewerRef.current.getHfov();
-          const syncedZoom = 1 + (100 - currentHfov) / 40;
-          setZoomLevel(syncedZoom);
+          try {
+            const currentHfov = pannellumViewerRef.current.getHfov();
+            // Inverse mapping: SliderVal 1 = HFOV 100, SliderVal 3.25 = HFOV 10
+            const syncedZoom = 1 + (100 - currentHfov) / 40;
+            // Only update if difference is significant to avoid slider jitter
+            setZoomLevel(prev => Math.abs(prev - syncedZoom) > 0.005 ? syncedZoom : prev);
+          } catch (err) {
+            // Viewer might be destroying
+          }
         }
-      }, 50);
+      }, 30); // 30fps sync
       return () => clearInterval(syncInterval);
     }
-  }, [fullscreenIndex, is360Active]);
+  }, [is360Active, fullscreenIndex]);
 
-  // Robust 360 Viewer Initialization with dimension-polling for mobile stability
+  // Robust 360 Viewer Initialization
   useEffect(() => {
     let checkInterval: number;
     const is360 = isCurrentIndex360(fullscreenIndex);
@@ -276,11 +273,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
       const initViewer = () => {
         if (!pannellumContainerRef.current || !window.pannellum) return;
         
-        // Pannellum needs non-zero dimensions to start WebGL context correctly
         const width = pannellumContainerRef.current.offsetWidth;
         const height = pannellumContainerRef.current.offsetHeight;
         
         if (width > 0 && height > 0) {
+          clearInterval(checkInterval);
+
           if (pannellumViewerRef.current) {
             pannellumViewerRef.current.destroy();
           }
@@ -297,21 +295,22 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             doubleClickZoom: true,
             hfov: 100,
             minHfov: 10,
-            maxHfov: 150, // Allow wide-angle "negative" zoom
+            maxHfov: 150,
             draggable: true,
             crossOrigin: 'anonymous',
           });
 
+          // Solve black screen by forcing multiple resizes once loaded
           pannellumViewerRef.current.on('load', () => {
-            setTimeout(() => pannellumViewerRef.current?.resize(), 100);
+            setTimeout(() => pannellumViewerRef.current?.resize(), 50);
+            setTimeout(() => pannellumViewerRef.current?.resize(), 200);
+            setTimeout(() => pannellumViewerRef.current?.resize(), 500);
           });
-          
-          clearInterval(checkInterval);
         }
       };
 
-      // Poll until the container has dimensions (crucial for mobile layout shifts)
-      checkInterval = window.setInterval(initViewer, 100);
+      // Poll until container has dimensions
+      checkInterval = window.setInterval(initViewer, 50);
     }
 
     return () => {
@@ -507,7 +506,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           onClick={closeFullscreen}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          onWheel={handleWheel}
         >
           <button 
             onClick={closeFullscreen}
@@ -536,7 +534,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             >
                <div className="max-w-full max-h-full w-full h-full flex items-center justify-center">
                    {is360Active ? (
-                      <div ref={pannellumContainerRef} className="w-full h-full bg-black" />
+                      <div ref={pannellumContainerRef} className="w-full h-full bg-black opacity-100" />
                    ) : (
                       <div className="flex items-center justify-center w-full h-full">
                         <ProgressiveImage
