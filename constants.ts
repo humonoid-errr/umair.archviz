@@ -71,10 +71,23 @@ export const initialProjects: Project[] = [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/1.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/2.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/3.jpg',
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/4.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/4-4.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/5.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/6.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/7.jpg',
+    ],
+  },
+    {
+    id: 10,
+    name: 'Babita Apartment',
+    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Babita%20Apartment',
+    theme: 'light',
+    is360: true, // Mark this project as having 360 content
+    galleryImages: [
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Babita%20Apartment/1.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Babita%20Apartment/2.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Babita%20Apartment/3.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Babita%20Apartment/3.jpg',
     ],
   },
   {
