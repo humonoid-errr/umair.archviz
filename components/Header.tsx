@@ -107,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
         <div className={`relative flex justify-between items-center ${getTextClasses()}`}>
           <button
             onClick={() => onNavigate('home')}
-            className="text-lg md:text-2xl font-light tracking-[0.3em] md:tracking-[0.5em] uppercase bg-transparent border-none p-0 text-left cursor-pointer origin-left transition-all duration-500 ease-out hover:tracking-[0.4em] md:hover:tracking-[0.6em]"
+            className="text-lg md:text-2xl font-light tracking-[0.3em] md:tracking-[0.5em] uppercase bg-transparent border-none p-0 text-left cursor-pointer hover:opacity-70 transition-opacity"
             aria-label="Go to home page"
           >
             MOHD UMAIR
@@ -131,7 +131,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
                 {isWorkMenuOpen && projects.length > 0 && (
                   <div className="absolute top-full pt-4 -ml-4 w-64 text-white z-30">
                     <div className="bg-black/80 backdrop-blur-lg border border-white/10 rounded-md overflow-hidden flex flex-col shadow-2xl">
-                      <ul className="max-h-80 overflow-y-auto py-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-white/60">
+                      <ul className="max-h-[70vh] overflow-y-auto py-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-white/60">
                         {projects.map(project => (
                             <li key={project.id}>
                               <button 
@@ -218,7 +218,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
             </div>
             <div className="text-xs text-gray-500 font-light space-y-2 text-left">
                 <p><a href="tel:+918439144238" className="hover:underline">+91-84391-44238</a></p>
-                <p><a href="mailto:hello@umair-archviz.work" className="hover:underline">hello@umair-archviz.work</a></p>
+                <p><a href="mailto:umairsaifi10@gmail.com" className="hover:underline">umairsaifi10@gmail.com</a></p>
                 <p className="pt-2">Address: Available Worldwide</p>
             </div>
             <p className="text-xs text-gray-400 font-light mt-8 text-left tracking-wider">
