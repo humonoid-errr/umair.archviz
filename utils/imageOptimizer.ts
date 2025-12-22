@@ -36,8 +36,8 @@ export const isImageUrl360 = (url: string): boolean => {
 
 /**
  * Provides an optimized, proxied image URL for thumbnails and standard views.
- * We automatically detect if an image is a 360 panorama and return the raw URL 
- * instead of a proxy to preserve 8K texture quality.
+ * For 360 panoramas, we now allow proxying at high resolutions (e.g., 4096px) 
+ * to ensure compatibility with mobile WebGL texture limits while maintaining high quality.
  */
 export const getOptimizedImage = (url: string, width: number = 1200, quality: number = 80): string => {
   if (!url) return '';
@@ -45,9 +45,6 @@ export const getOptimizedImage = (url: string, width: number = 1200, quality: nu
   // Get raw URL first
   const rawUrl = getRawAssetUrl(url);
   
-  // Normalize the URL by decoding any existing percent-encoding to prevent double-encoding
-  // when we pass it to the proxy service. 
-  // This handles cases where a space is already '%20' in the source constant.
   let decodedUrl = rawUrl;
   try {
     decodedUrl = decodeURIComponent(rawUrl);
@@ -55,14 +52,20 @@ export const getOptimizedImage = (url: string, width: number = 1200, quality: nu
     // If decoding fails, fallback to rawUrl
   }
 
-  // If it's a 360 image, NEVER use the proxy as it will downscale the 8K texture
+  // Handle 360 images specifically
   if (isImageUrl360(decodedUrl)) {
+    // If a non-default width is requested (e.g., 4096 for mobile or 400 for thumb), use the proxy.
+    // This solves the 'WebGL not supported' error on mobile caused by 8K texture limits.
+    if (width !== 1200 || width < 1000) {
+      return `https://wsrv.nl/?url=${encodeURIComponent(decodedUrl)}&w=${width}&q=${quality}&output=webp`;
+    }
+    // Default to raw for 360 if no specific constraints
     return rawUrl;
   }
 
   // If it's already a proxied URL, return as is
   if (decodedUrl.includes('wsrv.nl')) return rawUrl;
 
-  // Use wsrv.nl for standard image optimization, encoding the decoded URL correctly once
+  // Use wsrv.nl for standard image optimization
   return `https://wsrv.nl/?url=${encodeURIComponent(decodedUrl)}&w=${width}&q=${quality}&output=webp`;
 };
