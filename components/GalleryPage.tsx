@@ -547,9 +547,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
               {galleryImages.map((image, index) => (
                 <div 
                   key={index} 
-                  className="relative group/image flex-shrink-0 snap-center w-auto h-full first:pl-16 last:pr-16 overflow-hidden flex items-center justify-center"
+                  className="group/image flex-shrink-0 snap-center w-auto h-full first:pl-16 last:pr-16 overflow-hidden flex items-center justify-center"
                 >
-                  <div className="h-full w-auto transition-transform duration-100 ease-linear will-change-transform">
+                  <div className="relative h-full w-auto transition-transform duration-100 ease-linear will-change-transform">
                       <ProgressiveImage
                         src={image}
                         alt={`${project.name} gallery image ${index + 1}`}
@@ -560,18 +560,18 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                         className="h-full w-auto object-contain"
                         isProject360={project.is360}
                       />
-                  </div>
-                    {(project.is360 || isImageUrl360(image)) && (
-                      <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-[11px] font-bold tracking-widest uppercase z-10 border border-white/20 opacity-0 group-hover/image:opacity-100 transition-opacity">
-                        360° Panorama
+                      {(project.is360 || isImageUrl360(image)) && (
+                        <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-[11px] font-bold tracking-widest uppercase z-10 border border-white/20 opacity-0 group-hover/image:opacity-100 transition-opacity">
+                          360° Panorama
+                        </div>
+                      )}
+                      <div
+                        onClick={() => openFullscreen(index)}
+                        className="absolute top-4 right-8 bg-white/50 backdrop-blur-sm p-3 rounded-full text-gray-800 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 hover:bg-white/80 cursor-pointer z-10"
+                      >
+                        <FullscreenIcon className="w-5 h-5" />
                       </div>
-                    )}
-                   <div
-                      onClick={() => openFullscreen(index)}
-                      className="absolute top-4 right-8 bg-white/50 backdrop-blur-sm p-3 rounded-full text-gray-800 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 hover:bg-white/80 cursor-pointer z-10"
-                    >
-                      <FullscreenIcon className="w-5 h-5" />
-                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -598,7 +598,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           © Mohd Umair 2025
         </footer>
       </section>
-
+      
+      {/* ... (rest of the component remains exactly as it was, including the fullscreen overlay) ... */}
       <button
         onClick={scrollToTop}
         className={`fixed bottom-8 right-8 z-30 p-3 bg-black/80 backdrop-blur-sm border border-white/10 shadow-xl rounded-full text-white transition-all duration-300 lg:hidden hover:scale-110 active:scale-95 ${
