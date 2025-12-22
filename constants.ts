@@ -72,6 +72,9 @@ export const initialProjects: Project[] = [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/2.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/3.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/4.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/5.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/6.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/7.jpg',
     ],
   },
   {
