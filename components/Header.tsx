@@ -57,7 +57,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
   };
 
   const getHeaderClasses = () => {
-    const baseClasses = "absolute top-0 left-0 right-0 z-20 group";
+    // Increased z-index to 40 to ensure it sits above Hero content (images z-20, gradient z-30)
+    const baseClasses = "absolute top-0 left-0 right-0 z-40 group";
     return `${baseClasses} py-8 md:py-12 px-8 md:px-24`;
   };
   
@@ -176,7 +177,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
       </header>
 
       {isMobileMenuOpen && (
-        <div className={`fixed inset-0 bg-white z-50 text-gray-900 p-8 flex flex-col md:hidden transform transition-transform duration-300 ease-in-out ${isMenuVisible ? 'translate-x-0' : 'translate-x-full'} overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
+        <div className={`fixed inset-0 bg-white z-[60] text-gray-900 p-8 flex flex-col md:hidden transform transition-transform duration-300 ease-in-out ${isMenuVisible ? 'translate-x-0' : 'translate-x-full'} overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
           <div className="flex justify-end flex-shrink-0">
             <button onClick={closeMobileMenu} aria-label="Close menu" className="p-2 -m-2">
               <CloseIcon className="w-8 h-8 text-gray-900" />
