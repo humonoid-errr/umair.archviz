@@ -11,7 +11,7 @@ import { getOptimizedImage, getRawAssetUrl, isImageUrl360 } from '../utils/image
 
 // Pannellum Type declaration for TS
 declare global {
-  interface Window {
+  interface window {
     pannellum: any;
   }
 }
@@ -34,26 +34,41 @@ const ProgressiveImage: React.FC<{
   const [isLoaded, setIsLoaded] = useState(false);
   
   const is360 = isImageUrl360(src);
-  const thumbSrc = is360 ? getOptimizedImage(src, 600, 60) : getOptimizedImage(src, 40, 20);
-
+  
   useEffect(() => {
+    // Stage 1: Tiny blur-up thumbnail
+    const thumbSrc = getOptimizedImage(src, 50, 20, false);
     setCurrentSrc(thumbSrc);
     setIsLoaded(false);
+
+    // Stage 2: Optimized high-res (DPR aware)
+    const isMobile = window.innerWidth < 768;
+    const optimizedWidth = isMobile ? 1200 : 2560; // Fetch higher res for mobile retina
+    const optimizedSrc = getOptimizedImage(src, optimizedWidth, 90, true);
+    
     const img = new Image();
-    const rawUrl = getRawAssetUrl(src);
-    img.src = rawUrl;
+    img.src = optimizedSrc;
     img.onload = () => {
-      setCurrentSrc(rawUrl);
+      setCurrentSrc(optimizedSrc);
       setIsLoaded(true);
       if (onLoad) onLoad();
+      
+      // Stage 3: Attempt to load raw URL for maximum clarity if not a 360
+      if (!is360 && !isMobile) {
+        const rawImg = new Image();
+        rawImg.src = getRawAssetUrl(src);
+        rawImg.onload = () => {
+          setCurrentSrc(rawImg.src);
+        };
+      }
     };
-  }, [src, thumbSrc, onLoad]);
+  }, [src, is360, onLoad]);
 
   return (
     <div className="relative w-full h-full overflow-hidden flex items-center justify-center" style={style}>
        {!is360 && (
          <img
-            src={thumbSrc}
+            src={getOptimizedImage(src, 40, 10, false)}
             alt=""
             className={`absolute inset-0 w-full h-full object-cover filter blur-xl scale-110 transition-opacity duration-700 ease-in-out ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
             draggable={false}
@@ -226,7 +241,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsBrowserFullscreen(!!document.fullscreenElement);
-      // Small delay to let browser handle UI shift, then resize viewer if active
       setTimeout(() => {
         if (pannellumViewerRef.current) pannellumViewerRef.current.resize();
       }, 100);
@@ -305,7 +319,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     if (fullscreenIndex !== null && is360 && isOverlayAnimationDone && pannellumContainerRef.current) {
       setIs360Loading(true);
       const initViewer = () => {
-        if (!pannellumContainerRef.current || !window.pannellum) return;
+        if (!(window as any).pannellum || !pannellumContainerRef.current) return;
         const width = pannellumContainerRef.current.offsetWidth;
         const height = pannellumContainerRef.current.offsetHeight;
         if (width > 0 && height > 0) {
@@ -315,12 +329,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             pannellumViewerRef.current = null;
           }
           const isMobile = window.innerWidth < 1024;
+          // Use our high-quality optimization for mobile 360 images
           const panoramaUrl = isMobile 
-            ? getOptimizedImage(galleryImages[fullscreenIndex], 4096, 90) 
+            ? getOptimizedImage(galleryImages[fullscreenIndex], 4096, 92, true) 
             : getRawAssetUrl(galleryImages[fullscreenIndex]);
           
           try {
-            pannellumViewerRef.current = window.pannellum.viewer(pannellumContainerRef.current, {
+            pannellumViewerRef.current = (window as any).pannellum.viewer(pannellumContainerRef.current, {
               type: 'equirectangular',
               panorama: panoramaUrl,
               autoLoad: true,
