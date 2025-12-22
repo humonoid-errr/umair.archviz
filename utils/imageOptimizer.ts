@@ -42,16 +42,27 @@ export const isImageUrl360 = (url: string): boolean => {
 export const getOptimizedImage = (url: string, width: number = 1200, quality: number = 80): string => {
   if (!url) return '';
   
+  // Get raw URL first
   const rawUrl = getRawAssetUrl(url);
+  
+  // Normalize the URL by decoding any existing percent-encoding to prevent double-encoding
+  // when we pass it to the proxy service. 
+  // This handles cases where a space is already '%20' in the source constant.
+  let decodedUrl = rawUrl;
+  try {
+    decodedUrl = decodeURIComponent(rawUrl);
+  } catch (e) {
+    // If decoding fails, fallback to rawUrl
+  }
 
   // If it's a 360 image, NEVER use the proxy as it will downscale the 8K texture
-  if (isImageUrl360(rawUrl)) {
+  if (isImageUrl360(decodedUrl)) {
     return rawUrl;
   }
 
   // If it's already a proxied URL, return as is
-  if (rawUrl.includes('wsrv.nl')) return rawUrl;
+  if (decodedUrl.includes('wsrv.nl')) return rawUrl;
 
-  // Use wsrv.nl for standard image optimization
-  return `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}&w=${width}&q=${quality}&output=webp`;
+  // Use wsrv.nl for standard image optimization, encoding the decoded URL correctly once
+  return `https://wsrv.nl/?url=${encodeURIComponent(decodedUrl)}&w=${width}&q=${quality}&output=webp`;
 };
