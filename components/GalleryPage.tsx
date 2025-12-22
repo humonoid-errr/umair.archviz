@@ -33,7 +33,7 @@ const ProgressiveImage: React.FC<{
   const [isLoaded, setIsLoaded] = useState(false);
   
   const is360 = isImageUrl360(src);
-  const thumbSrc = is360 ? getRawAssetUrl(src) : getOptimizedImage(src, 40, 20);
+  const thumbSrc = is360 ? getOptimizedImage(src, 600, 60) : getOptimizedImage(src, 40, 20);
 
   useEffect(() => {
     setCurrentSrc(thumbSrc);
@@ -301,7 +301,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   // Robust 360 Viewer Initialization logic
   useEffect(() => {
     let checkInterval: number;
-    let resizeTimer: number;
     const is360 = isCurrentIndex360(fullscreenIndex);
     setIs360Active(is360);
 
@@ -314,45 +313,57 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
         const width = pannellumContainerRef.current.offsetWidth;
         const height = pannellumContainerRef.current.offsetHeight;
         
-        // Pannellum needs non-zero dimensions to initialize WebGL correctly without a black screen
+        // Pannellum needs non-zero dimensions and a stable WebGL context.
+        // On mobile, texture size limits (often 4096px) are a primary cause for "WebGL not supported".
         if (width > 0 && height > 0) {
           clearInterval(checkInterval);
 
           if (pannellumViewerRef.current) {
-            pannellumViewerRef.current.destroy();
+            try { pannellumViewerRef.current.destroy(); } catch(e) {}
+            pannellumViewerRef.current = null;
           }
 
-          const rawUrl = getRawAssetUrl(galleryImages[fullscreenIndex]);
+          const isMobile = window.innerWidth < 1024;
+          // IMPORTANT: Cap 360 images to 4096px width on mobile to avoid WebGL context failure (black screen or error)
+          const panoramaUrl = isMobile 
+            ? getOptimizedImage(galleryImages[fullscreenIndex], 4096, 90) 
+            : getRawAssetUrl(galleryImages[fullscreenIndex]);
           
-          pannellumViewerRef.current = window.pannellum.viewer(pannellumContainerRef.current, {
-            type: 'equirectangular',
-            panorama: rawUrl,
-            autoLoad: true,
-            showControls: false,
-            mouseZoom: true,
-            keyboardZoom: true,
-            doubleClickZoom: true,
-            hfov: 100,
-            minHfov: 10,
-            maxHfov: 150,
-            draggable: true,
-            crossOrigin: 'anonymous',
-          });
+          try {
+            pannellumViewerRef.current = window.pannellum.viewer(pannellumContainerRef.current, {
+              type: 'equirectangular',
+              panorama: panoramaUrl,
+              autoLoad: true,
+              showControls: false,
+              mouseZoom: true,
+              keyboardZoom: true,
+              doubleClickZoom: true,
+              hfov: 100,
+              minHfov: 10,
+              maxHfov: 150,
+              draggable: true,
+              crossOrigin: 'anonymous',
+            });
 
-          // Solve black screen by ensuring multiple resizes after the load event
-          pannellumViewerRef.current.on('load', () => {
+            // Solve black screen by ensuring multiple resizes after the load event
+            pannellumViewerRef.current.on('load', () => {
+              setIs360Loading(false);
+              // Force multiple resizes to ensure canvas fills container correctly
+              if (pannellumViewerRef.current) {
+                pannellumViewerRef.current.resize();
+                setTimeout(() => pannellumViewerRef.current?.resize(), 100);
+                setTimeout(() => pannellumViewerRef.current?.resize(), 500);
+              }
+            });
+            
+            pannellumViewerRef.current.on('error', (err: any) => {
+              console.error('Pannellum Error:', err);
+              setIs360Loading(false);
+            });
+          } catch (e) {
+            console.error('Failed to init Pannellum:', e);
             setIs360Loading(false);
-            // Multiple resizes to ensure WebGL context fills container after any flex/transition settling
-            pannellumViewerRef.current.resize();
-            setTimeout(() => pannellumViewerRef.current?.resize(), 100);
-            setTimeout(() => pannellumViewerRef.current?.resize(), 500);
-            setTimeout(() => pannellumViewerRef.current?.resize(), 1000);
-          });
-          
-          pannellumViewerRef.current.on('error', (err: any) => {
-            console.error('Pannellum Error:', err);
-            setIs360Loading(false);
-          });
+          }
         }
       };
 
@@ -362,9 +373,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
 
     return () => {
       clearInterval(checkInterval);
-      clearTimeout(resizeTimer);
       if (pannellumViewerRef.current) {
-        pannellumViewerRef.current.destroy();
+        try { pannellumViewerRef.current.destroy(); } catch(e) {}
         pannellumViewerRef.current = null;
       }
     };
