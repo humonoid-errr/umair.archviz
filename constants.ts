@@ -117,13 +117,13 @@ export const initialProjects: Project[] = [
     theme: 'light',
     galleryImages: [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/neo%20classical/1.jpg',
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/neo%20classical/2.jpeg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/neo%20classical/2.jpg',
     ],
   },
   {
     id: 7,
     name: 'Modern Minimalist Elevation',
-    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/1.jpeg',
+    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/1.jpg',
     theme: 'dark',
     galleryImages: [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/modern%20minimilist/1.jpg',
