@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { RandomImage } from '../types';
+import { isImageUrl360 } from '../utils/imageOptimizer';
 
 interface HeroProps {
   image: RandomImage | null;
@@ -29,14 +30,22 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
     preloader.onload = () => {
       if (isCancelled) return;
       
+      const url = decodeURIComponent(image.imageUrl);
       const isPortrait = preloader.naturalHeight > preloader.naturalWidth;
       const isMobile = window.innerWidth < 768; 
+      const is360 = isImageUrl360(url);
+
+      // Skip 360 images globally as they distort in 2D cover mode
+      if (is360) {
+        if (onSkip) onSkip();
+        return;
+      }
 
       /**
        * Desktop Exclusion Logic
+       * Skip Portrait images on desktop to prevent awkward crops
        */
       if (!isMobile) {
-        const url = decodeURIComponent(image.imageUrl);
         const desktopBlacklist = [
           'apartment%20sanskar', 'apartment sanskar',
           'Piano%20house/9.jpg', 'Piano house/9.jpg',
@@ -108,18 +117,14 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
 
     if (isActive) {
         // Active: Fully visible, clear (no blur)
-        // This causes the browser to animate from blur-xl -> blur-0 and opacity-0 -> opacity-100
         stateClasses = 'opacity-100 blur-0';
         transitionClasses = 'transition-all duration-[2500ms] ease-in-out';
     } else if (isTransitioning) {
         // Outgoing (Background): Fully visible, clear (no blur)
-        // Stays clear while being covered by the incoming image
         stateClasses = 'opacity-100 blur-0';
         transitionClasses = 'transition-none';
     } else {
         // Idle (Hidden): Invisible, Blurred
-        // The image sits in this state waiting to be activated. 
-        // When activated, it will transition FROM this state.
         stateClasses = 'opacity-0 blur-xl';
         transitionClasses = 'transition-none';
     }
