@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Project } from '../types';
 import { FullscreenIcon } from './icons/FullscreenIcon';
+import { MinimizeIcon } from './icons/MinimizeIcon';
 import { CloseIcon } from './icons/CloseIcon';
 import { ChevronLeftIcon } from './icons/ChevronLeftIcon';
 import { ChevronRightIcon } from './icons/ChevronRightIcon';
@@ -77,10 +78,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   const fullscreenContainerRef = useRef<HTMLDivElement>(null);
   const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
   const [activeFullscreenArrow, setActiveFullscreenArrow] = useState<'left' | 'right' | null>(null);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isBrowserFullscreen, setIsBrowserFullscreen] = useState(false);
 
   // Zoom and Pan State
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -200,6 +201,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   };
 
   const closeFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => console.error(err));
+    }
     if (pannellumViewerRef.current) {
       pannellumViewerRef.current.destroy();
       pannellumViewerRef.current = null;
@@ -208,6 +212,28 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     setIsOverlayAnimationDone(false);
     resetZoom();
   }, [resetZoom]);
+
+  const toggleBrowserFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsBrowserFullscreen(!!document.fullscreenElement);
+      // Small delay to let browser handle UI shift, then resize viewer if active
+      setTimeout(() => {
+        if (pannellumViewerRef.current) pannellumViewerRef.current.resize();
+      }, 100);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   const goToNextImage = useCallback(() => {
     if (fullscreenIndex === null) return;
@@ -222,49 +248,30 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     const isFirstImage = fullscreenIndex === 0;
     setFullscreenIndex(isFirstImage ? galleryImages.length - 1 : fullscreenIndex - 1);
   }, [fullscreenIndex, galleryImages.length, resetZoom]);
-  
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (zoomLevel === 1) setTouchStartX(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX === null || zoomLevel > 1) return;
-    const deltaX = e.changedTouches[0].clientX - touchStartX;
-    setTouchStartX(null);
-    if (deltaX > 50) goToPreviousImage();
-    else if (deltaX < -50) goToNextImage();
-  };
 
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newZoom = parseFloat(e.target.value);
     setZoomLevel(newZoom);
     if (is360Active && pannellumViewerRef.current) {
-      // Mapping: zoomLevel 1 -> hfov 100, zoomLevel 3.25 -> hfov 10
       const hfov = 100 - (newZoom - 1) * 40; 
-      pannellumViewerRef.current.setHfov(hfov, false); // false = immediate
+      pannellumViewerRef.current.setHfov(hfov, false); 
     }
     if (newZoom <= 1 && !is360Active) {
       setPanPosition({ x: 0, y: 0 });
     }
   };
 
-  // Mouse Wheel Zoom for non-360 images
   useEffect(() => {
     const container = fullscreenContainerRef.current;
     if (!container || is360Active || fullscreenIndex === null) return;
 
     const handleWheel = (e: WheelEvent) => {
-      // Prevent default browser scrolling
       e.preventDefault();
-
       const zoomStep = 0.15;
       const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
-      
       setZoomLevel(prev => {
         const nextZoom = Math.min(Math.max(prev + delta, 1), 3.25);
-        if (nextZoom <= 1) {
-          setPanPosition({ x: 0, y: 0 });
-        }
+        if (nextZoom <= 1) setPanPosition({ x: 0, y: 0 });
         return nextZoom;
       });
     };
@@ -273,8 +280,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     return () => container.removeEventListener('wheel', handleWheel);
   }, [is360Active, fullscreenIndex]);
 
-  // Improved Bi-directional Zoom Synchronization
-  // Listens to Pannellum's internal state to update the slider
   useEffect(() => {
     if (is360Active && pannellumViewerRef.current) {
       const syncInterval = setInterval(() => {
@@ -282,23 +287,16 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           try {
             const currentHfov = pannellumViewerRef.current.getHfov();
             if (currentHfov !== undefined) {
-              // Convert HFOV back to Slider 1.0-3.25 range
-              // hfov 100 -> 1.0
-              // hfov 10 -> 3.25
               const calculatedZoom = 1 + (100 - currentHfov) / 40;
-              // Update state if difference is significant to prevent jitter
               setZoomLevel(prev => Math.abs(prev - calculatedZoom) > 0.001 ? calculatedZoom : prev);
             }
-          } catch (err) {
-            // Viewer might be destroyed or not ready
-          }
+          } catch (err) {}
         }
-      }, 30); // 30ms sync frequency for smooth scroller interaction
+      }, 30);
       return () => clearInterval(syncInterval);
     }
   }, [is360Active, fullscreenIndex]);
 
-  // Robust 360 Viewer Initialization logic
   useEffect(() => {
     let checkInterval: number;
     const is360 = isCurrentIndex360(fullscreenIndex);
@@ -306,25 +304,17 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
 
     if (fullscreenIndex !== null && is360 && isOverlayAnimationDone && pannellumContainerRef.current) {
       setIs360Loading(true);
-      
       const initViewer = () => {
         if (!pannellumContainerRef.current || !window.pannellum) return;
-        
         const width = pannellumContainerRef.current.offsetWidth;
         const height = pannellumContainerRef.current.offsetHeight;
-        
-        // Pannellum needs non-zero dimensions and a stable WebGL context.
-        // On mobile, texture size limits (often 4096px) are a primary cause for "WebGL not supported".
         if (width > 0 && height > 0) {
           clearInterval(checkInterval);
-
           if (pannellumViewerRef.current) {
             try { pannellumViewerRef.current.destroy(); } catch(e) {}
             pannellumViewerRef.current = null;
           }
-
           const isMobile = window.innerWidth < 1024;
-          // IMPORTANT: Cap 360 images to 4096px width on mobile to avoid WebGL context failure (black screen or error)
           const panoramaUrl = isMobile 
             ? getOptimizedImage(galleryImages[fullscreenIndex], 4096, 90) 
             : getRawAssetUrl(galleryImages[fullscreenIndex]);
@@ -344,18 +334,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
               draggable: true,
               crossOrigin: 'anonymous',
             });
-
-            // Solve black screen by ensuring multiple resizes after the load event
             pannellumViewerRef.current.on('load', () => {
               setIs360Loading(false);
-              // Force multiple resizes to ensure canvas fills container correctly
               if (pannellumViewerRef.current) {
                 pannellumViewerRef.current.resize();
                 setTimeout(() => pannellumViewerRef.current?.resize(), 100);
                 setTimeout(() => pannellumViewerRef.current?.resize(), 500);
               }
             });
-            
             pannellumViewerRef.current.on('error', (err: any) => {
               console.error('Pannellum Error:', err);
               setIs360Loading(false);
@@ -366,11 +352,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           }
         }
       };
-
-      // Poll until container has dimensions and overlay is stable
       checkInterval = window.setInterval(initViewer, 100);
     }
-
     return () => {
       clearInterval(checkInterval);
       if (pannellumViewerRef.current) {
@@ -409,6 +392,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
       if (event.key === 'Escape') closeFullscreen();
       else if (event.key === 'ArrowRight') goToNextImage();
       else if (event.key === 'ArrowLeft') goToPreviousImage();
+      else if (event.key === 'f') toggleBrowserFullscreen();
     };
     if (fullscreenIndex !== null) {
       document.body.style.overflow = 'hidden';
@@ -420,7 +404,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'auto';
     };
-  }, [fullscreenIndex, closeFullscreen, goToNextImage, goToPreviousImage]);
+  }, [fullscreenIndex, closeFullscreen, goToNextImage, goToPreviousImage, toggleBrowserFullscreen]);
   
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -563,23 +547,33 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           className="fixed inset-0 bg-white z-50 flex items-center justify-center animate-fadeIn overflow-hidden"
           onAnimationEnd={() => setIsOverlayAnimationDone(true)}
           onClick={closeFullscreen}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
         >
-          <button 
-            onClick={closeFullscreen}
-            className="absolute top-6 right-6 text-gray-800 hover:opacity-70 transition-opacity z-[60] p-2 hover:scale-110 active:scale-95"
-          >
-            <CloseIcon className="w-8 h-8" />
-          </button>
+          {/* Top Controls */}
+          <div className="absolute top-6 right-6 flex items-center gap-4 z-[60]">
+             <button 
+                onClick={(e) => { e.stopPropagation(); toggleBrowserFullscreen(); }}
+                className="text-gray-800 bg-white/50 backdrop-blur-sm p-2 rounded-full hover:bg-white/80 transition-all hover:scale-110 active:scale-95 border border-black/5"
+                title="Toggle Display Fullscreen"
+              >
+                {isBrowserFullscreen ? <MinimizeIcon className="w-6 h-6" /> : <FullscreenIcon className="w-6 h-6" />}
+              </button>
+              <button 
+                onClick={closeFullscreen}
+                className="text-gray-800 bg-white/50 backdrop-blur-sm p-2 rounded-full hover:bg-white/80 transition-all hover:scale-110 active:scale-95 border border-black/5"
+                aria-label="Close Gallery"
+              >
+                <CloseIcon className="w-6 h-6" />
+              </button>
+          </div>
           
           <div className="relative w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {/* Arrows: Prominent on mobile, reactive on desktop */}
             {zoomLevel <= 1 && (
               <button
                 onClick={handlePreviousClick}
-                className={`absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
+                className={`absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 md:bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[2px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
               >
-                <ChevronLeftIcon className="w-8 h-8 text-gray-800" />
+                <ChevronLeftIcon className="w-10 h-10 md:w-8 md:h-8 text-white md:text-gray-800" />
               </button>
             )}
 
@@ -628,9 +622,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             {zoomLevel <= 1 && (
               <button
                 onClick={handleNextClick}
-                className={`absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
+                className={`absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 md:bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[2px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
               >
-                <ChevronRightIcon className="w-8 h-8 text-gray-800" />
+                <ChevronRightIcon className="w-10 h-10 md:w-8 md:h-8 text-white md:text-gray-800" />
               </button>
             )}
             
