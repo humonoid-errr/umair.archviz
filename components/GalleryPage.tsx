@@ -6,7 +6,7 @@ import { CloseIcon } from './icons/CloseIcon';
 import { ChevronLeftIcon } from './icons/ChevronLeftIcon';
 import { ChevronRightIcon } from './icons/ChevronRightIcon';
 import { ChevronUpIcon } from './icons/ChevronUpIcon';
-import { getOptimizedImage, getRawAssetUrl } from '../utils/imageOptimizer';
+import { getOptimizedImage, getRawAssetUrl, isImageUrl360 } from '../utils/imageOptimizer';
 
 // Pannellum Type declaration for TS
 declare global {
@@ -31,13 +31,15 @@ const ProgressiveImage: React.FC<{
 }> = ({ src, alt, className, style, loading, draggable, onContextMenu, onLoad }) => {
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
-  const tinySrc = getOptimizedImage(src, 20, 20);
+  
+  // For standard images, we use optimized thumbs. For 360 detection, getOptimizedImage returns raw.
+  const is360 = isImageUrl360(src);
+  const thumbSrc = is360 ? getRawAssetUrl(src) : getOptimizedImage(src, 40, 20);
 
   useEffect(() => {
-    setCurrentSrc(tinySrc);
+    setCurrentSrc(thumbSrc);
     setIsLoaded(false);
     const img = new Image();
-    // Use raw URL for loading full quality
     const rawUrl = getRawAssetUrl(src);
     img.src = rawUrl;
     img.onload = () => {
@@ -45,16 +47,18 @@ const ProgressiveImage: React.FC<{
       setIsLoaded(true);
       if (onLoad) onLoad();
     };
-  }, [src, tinySrc, onLoad]);
+  }, [src, thumbSrc, onLoad]);
 
   return (
     <div className="relative w-full h-full overflow-hidden flex items-center justify-center" style={style}>
-       <img
-          src={tinySrc}
-          alt=""
-          className={`absolute inset-0 w-full h-full object-cover filter blur-xl scale-110 transition-opacity duration-700 ease-in-out ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
-          draggable={false}
-        />
+       {!is360 && (
+         <img
+            src={thumbSrc}
+            alt=""
+            className={`absolute inset-0 w-full h-full object-cover filter blur-xl scale-110 transition-opacity duration-700 ease-in-out ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
+            draggable={false}
+          />
+       )}
       <img
         src={currentSrc}
         alt={alt}
@@ -88,8 +92,17 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   // 360 Viewer State
   const pannellumViewerRef = useRef<any>(null);
   const pannellumContainerRef = useRef<HTMLDivElement>(null);
+  const [is360Active, setIs360Active] = useState(false);
 
   const galleryImages = project.galleryImages;
+
+  // Check if the current visible image is a 360 panorama
+  const isCurrentIndex360 = useCallback((index: number | null) => {
+    if (index === null) return false;
+    const url = galleryImages[index];
+    // Future proof: Detect via project flag OR filename keywords
+    return project.is360 || isImageUrl360(url);
+  }, [project.is360, galleryImages]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -133,7 +146,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   }, [checkScrollability]);
 
   useEffect(() => {
-    if (project.is360) return;
+    // Standard parallax effect
     let animationFrameId: number;
     const updateParallax = () => {
       const isMobile = window.innerWidth < 1024;
@@ -158,7 +171,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     };
     updateParallax();
     return () => cancelAnimationFrame(animationFrameId);
-  }, [project, project.is360]);
+  }, [project]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     const el = scrollContainerRef.current;
@@ -225,71 +238,93 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newZoom = parseFloat(e.target.value);
     setZoomLevel(newZoom);
-    if (project.is360 && pannellumViewerRef.current) {
+    if (is360Active && pannellumViewerRef.current) {
       const hfov = 100 - (newZoom - 1) * 40; 
       pannellumViewerRef.current.setHfov(hfov);
     }
-    if (newZoom <= 1 && !project.is360) {
+    if (newZoom <= 1 && !is360Active) {
       setPanPosition({ x: 0, y: 0 });
     }
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    // Disable wheel zoom for still images as requested
-    if (!project.is360) return;
-    
-    // For 360 images, Pannellum handles the internal mouseZoom: true
-    // We just need to ensure we don't interfere and sync the slider.
+    if (!is360Active) return;
+    // Pannellum handles its own wheel internally with mouseZoom: true
   };
 
   // Sync Slider with Pannellum mouse-wheel zoom
   useEffect(() => {
-    if (project.is360 && pannellumViewerRef.current) {
+    if (is360Active && pannellumViewerRef.current) {
       const syncInterval = setInterval(() => {
         if (pannellumViewerRef.current) {
           const currentHfov = pannellumViewerRef.current.getHfov();
-          // Inverse of: hfov = 100 - (zoomLevel - 1) * 40
           const syncedZoom = 1 + (100 - currentHfov) / 40;
           setZoomLevel(syncedZoom);
         }
       }, 50);
       return () => clearInterval(syncInterval);
     }
-  }, [fullscreenIndex, project.is360]);
+  }, [fullscreenIndex, is360Active]);
 
-  // 360 Initialization
+  // Robust 360 Viewer Initialization with dimension-polling for mobile stability
   useEffect(() => {
-    if (fullscreenIndex !== null && project.is360 && pannellumContainerRef.current) {
+    let checkInterval: number;
+    const is360 = isCurrentIndex360(fullscreenIndex);
+    setIs360Active(is360);
+
+    if (fullscreenIndex !== null && is360 && pannellumContainerRef.current) {
+      const initViewer = () => {
+        if (!pannellumContainerRef.current || !window.pannellum) return;
+        
+        // Pannellum needs non-zero dimensions to start WebGL context correctly
+        const width = pannellumContainerRef.current.offsetWidth;
+        const height = pannellumContainerRef.current.offsetHeight;
+        
+        if (width > 0 && height > 0) {
+          if (pannellumViewerRef.current) {
+            pannellumViewerRef.current.destroy();
+          }
+
+          const rawUrl = getRawAssetUrl(galleryImages[fullscreenIndex]);
+          
+          pannellumViewerRef.current = window.pannellum.viewer(pannellumContainerRef.current, {
+            type: 'equirectangular',
+            panorama: rawUrl,
+            autoLoad: true,
+            showControls: false,
+            mouseZoom: true,
+            keyboardZoom: true,
+            doubleClickZoom: true,
+            hfov: 100,
+            minHfov: 10,
+            maxHfov: 150, // Allow wide-angle "negative" zoom
+            draggable: true,
+            crossOrigin: 'anonymous',
+          });
+
+          pannellumViewerRef.current.on('load', () => {
+            setTimeout(() => pannellumViewerRef.current?.resize(), 100);
+          });
+          
+          clearInterval(checkInterval);
+        }
+      };
+
+      // Poll until the container has dimensions (crucial for mobile layout shifts)
+      checkInterval = window.setInterval(initViewer, 100);
+    }
+
+    return () => {
+      clearInterval(checkInterval);
       if (pannellumViewerRef.current) {
         pannellumViewerRef.current.destroy();
+        pannellumViewerRef.current = null;
       }
-
-      const rawPanoramaUrl = getRawAssetUrl(galleryImages[fullscreenIndex]);
-
-      pannellumViewerRef.current = window.pannellum.viewer(pannellumContainerRef.current, {
-        type: 'equirectangular',
-        panorama: rawPanoramaUrl,
-        autoLoad: true,
-        showControls: false,
-        mouseZoom: true,    // Enable mouse scroll zoom for 360 images
-        keyboardZoom: true,
-        doubleClickZoom: true,
-        hfov: 100,
-        minHfov: 10,        // Zoom in limit
-        maxHfov: 150,       // Allows "Negative Zoom" / Wide angle view
-        draggable: true,
-        crossOrigin: 'anonymous', // Crucial for 8K textures from CDNs
-      });
-      
-      // Ensure resize happens after load for 8K stability
-      pannellumViewerRef.current.on('load', () => {
-        setTimeout(() => pannellumViewerRef.current?.resize(), 100);
-      });
-    }
-  }, [fullscreenIndex, project.is360, galleryImages]);
+    };
+  }, [fullscreenIndex, galleryImages, isCurrentIndex360]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (project.is360) return;
+    if (is360Active) return;
     if (zoomLevel > 1) {
       isDragging.current = true;
       lastPointerPos.current = { x: e.clientX, y: e.clientY };
@@ -298,7 +333,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (project.is360) return;
+    if (is360Active) return;
     if (isDragging.current && zoomLevel > 1) {
       const deltaX = e.clientX - lastPointerPos.current.x;
       const deltaY = e.clientY - lastPointerPos.current.y;
@@ -383,7 +418,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                     onContextMenu={(e) => e.preventDefault()}
                   />
                 </div>
-                {project.is360 && (
+                {(project.is360 || isImageUrl360(image)) && (
                   <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-bold tracking-widest uppercase z-10 border border-white/20">
                     360°
                   </div>
@@ -418,7 +453,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                         className="h-full w-auto object-contain"
                       />
                   </div>
-                    {project.is360 && (
+                    {(project.is360 || isImageUrl360(image)) && (
                       <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-[11px] font-bold tracking-widest uppercase z-10 border border-white/20 opacity-0 group-hover/image:opacity-100 transition-opacity">
                         360° Panorama
                       </div>
@@ -497,10 +532,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerUp}
-              style={{ cursor: zoomLevel > 1 && !project.is360 ? 'grab' : 'default' }}
+              style={{ cursor: zoomLevel > 1 && !is360Active ? 'grab' : 'default' }}
             >
                <div className="max-w-full max-h-full w-full h-full flex items-center justify-center">
-                   {project.is360 ? (
+                   {is360Active ? (
                       <div ref={pannellumContainerRef} className="w-full h-full bg-black" />
                    ) : (
                       <div className="flex items-center justify-center w-full h-full">
@@ -539,7 +574,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                <span className="text-white text-xs font-medium">Zoom</span>
                <input 
                   type="range" 
-                  min={project.is360 ? "-0.25" : "1"} 
+                  min={is360Active ? "-0.25" : "1"} 
                   max="3" 
                   step="0.01" 
                   value={zoomLevel} 
