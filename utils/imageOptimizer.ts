@@ -15,27 +15,43 @@ export const getRawAssetUrl = (url: string): string => {
       .replace('/blob/', '@');
   }
 
-  // Ensure raw.githubusercontent links are also handled if provided
+  // Ensure raw.githubusercontent links are also handled/normalized
   if (targetUrl.includes('raw.githubusercontent.com')) {
-    // These are already raw, but we could normalize them to jsdelivr if needed for better caching/CORS
-    targetUrl = targetUrl.replace('raw.githubusercontent.com', 'cdn.jsdelivr.net/gh').replace('/master/', '@master/').replace('/main/', '@main/');
+    targetUrl = targetUrl
+      .replace('raw.githubusercontent.com', 'cdn.jsdelivr.net/gh')
+      .replace('/master/', '@master/')
+      .replace('/main/', '@main/');
   }
 
   return targetUrl;
 };
 
 /**
+ * Checks if a URL likely points to a 360 panorama based on filename keywords.
+ */
+export const isImageUrl360 = (url: string): boolean => {
+  const lower = url.toLowerCase();
+  return lower.includes('panorama') || lower.includes('360') || lower.includes('equirectangular');
+};
+
+/**
  * Provides an optimized, proxied image URL for thumbnails and standard views.
- * For 360 views, we should NOT use this as it might downscale high-res panoramas.
+ * We automatically detect if an image is a 360 panorama and return the raw URL 
+ * instead of a proxy to preserve 8K texture quality.
  */
 export const getOptimizedImage = (url: string, width: number = 1200, quality: number = 80): string => {
   if (!url) return '';
   
   const rawUrl = getRawAssetUrl(url);
 
+  // If it's a 360 image, NEVER use the proxy as it will downscale the 8K texture
+  if (isImageUrl360(rawUrl)) {
+    return rawUrl;
+  }
+
   // If it's already a proxied URL, return as is
   if (rawUrl.includes('wsrv.nl')) return rawUrl;
 
-  // Use wsrv.nl to serve a WebP version for general UI performance
+  // Use wsrv.nl for standard image optimization
   return `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}&w=${width}&q=${quality}&output=webp`;
 };
