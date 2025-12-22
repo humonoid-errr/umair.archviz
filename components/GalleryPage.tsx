@@ -654,9 +654,24 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             >
                <div className="max-w-full max-h-full w-full h-full flex items-center justify-center relative bg-gray-50">
                    {is360Active && is360Loading && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white">
-                        <div className="w-12 h-12 border-2 border-gray-200 border-t-gray-800 rounded-full animate-spin mb-4" />
-                        <p className="text-xs font-light tracking-widest uppercase text-gray-400">Loading Panorama...</p>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center z-10 overflow-hidden bg-white">
+                        {/* Moving Blurred Background */}
+                        <div 
+                          className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 animate-kenburns opacity-60"
+                          style={{ backgroundImage: `url(${getOptimizedImage(galleryImages[fullscreenIndex], 100, 10, false)})` }}
+                        />
+                        {/* Pulsating Loader */}
+                        <div className="relative flex flex-col items-center">
+                          <div className="relative w-20 h-20">
+                            <div className="absolute inset-0 border-2 border-gray-800 rounded-full animate-ping opacity-10" />
+                            <div className="absolute inset-0 border border-gray-800 rounded-full animate-pulse flex items-center justify-center">
+                               <div className="w-3 h-3 bg-gray-800 rounded-full" />
+                            </div>
+                          </div>
+                          <p className="mt-10 text-[10px] font-light tracking-[0.5em] uppercase text-gray-500 animate-pulse">
+                            Immersing...
+                          </p>
+                        </div>
                       </div>
                    )}
                    
