@@ -35,37 +35,41 @@ export const isImageUrl360 = (url: string): boolean => {
 };
 
 /**
- * Provides an optimized, proxied image URL for thumbnails and standard views.
- * For 360 panoramas, we now allow proxying at high resolutions (e.g., 4096px) 
- * to ensure compatibility with mobile WebGL texture limits while maintaining high quality.
+ * Provides a high-quality, DPR-aware optimized image URL.
+ * Uses wsrv.nl for fast, reliable WebP conversion and resizing.
  */
-export const getOptimizedImage = (url: string, width: number = 1200, quality: number = 80): string => {
+export const getOptimizedImage = (
+  url: string, 
+  width: number = 1600, 
+  quality: number = 85,
+  isHighDensity: boolean = true
+): string => {
   if (!url) return '';
   
-  // Get raw URL first
   const rawUrl = getRawAssetUrl(url);
-  
   let decodedUrl = rawUrl;
   try {
     decodedUrl = decodeURIComponent(rawUrl);
-  } catch (e) {
-    // If decoding fails, fallback to rawUrl
-  }
+  } catch (e) {}
 
-  // Handle 360 images specifically
+  // Adjust width for high-density displays (Retina/Mobile)
+  const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+  const targetWidth = isHighDensity ? Math.round(width * Math.min(dpr, 2)) : width;
+
+  // 360 Panoramas specific logic
   if (isImageUrl360(decodedUrl)) {
-    // If a non-default width is requested (e.g., 4096 for mobile or 400 for thumb), use the proxy.
-    // This solves the 'WebGL not supported' error on mobile caused by 8K texture limits.
-    if (width !== 1200 || width < 1000) {
-      return `https://wsrv.nl/?url=${encodeURIComponent(decodedUrl)}&w=${width}&q=${quality}&output=webp`;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+    
+    if (isMobile) {
+      // 4096 is the safe WebGL texture limit for most mobile devices.
+      // We use 'sharp' and higher quality to ensure the spherical projection stays crisp.
+      return `https://wsrv.nl/?url=${encodeURIComponent(decodedUrl)}&w=4096&q=92&output=webp&sharp=1`;
     }
-    // Default to raw for 360 if no specific constraints
+    // On desktop, we prefer the raw high-res asset for maximum quality
     return rawUrl;
   }
 
-  // If it's already a proxied URL, return as is
-  if (decodedUrl.includes('wsrv.nl')) return rawUrl;
-
-  // Use wsrv.nl for standard image optimization
-  return `https://wsrv.nl/?url=${encodeURIComponent(decodedUrl)}&w=${width}&q=${quality}&output=webp`;
+  // Standard image optimization
+  // Using webp output and moderate sharpening for architectural details
+  return `https://wsrv.nl/?url=${encodeURIComponent(decodedUrl)}&w=${targetWidth}&q=${quality}&output=webp&sharp=0.5`;
 };
