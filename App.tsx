@@ -8,7 +8,6 @@ import ServicesSection from './components/ServicesSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import GalleryPage from './components/GalleryPage';
 import CustomCursor from './components/CustomCursor';
-import IntroOverlay from './components/IntroOverlay';
 import { initialProjects } from './constants';
 import { Project, RandomImage } from './types';
 import { initialAboutContent } from './constants/initialContent';
@@ -19,52 +18,16 @@ export type Page = 'home' | 'about' | 'services' | 'testimonials' | 'contact' | 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [showIntro, setShowIntro] = useState(true);
+  const [isZenMode, setIsZenMode] = useState(false);
   
-  // Initialize with a random index based on the total number of images available in initialProjects
-  // This ensures the landing page starts with a random image on every visit/refresh.
+  // Initialize with a random index
   const [currentHeroImageIndex, setCurrentHeroImageIndex] = useState(() => {
     const totalImages = initialProjects.reduce((acc, project) => acc + 1 + project.galleryImages.length, 0);
     return totalImages > 0 ? Math.floor(Math.random() * totalImages) : 0;
   });
-
-  // State to track the optimal image width based on screen size
-  const [heroImageWidth, setHeroImageWidth] = useState(1920);
   
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
-
-  // Optimize hero images based on screen size
-  useEffect(() => {
-    const calculateWidth = () => {
-      const width = window.innerWidth;
-      const dpr = window.devicePixelRatio || 1;
-      const physicalWidth = width * dpr;
-
-      // Determine optimal width bucket to maximize quality while managing bandwidth
-      if (physicalWidth <= 640) return 640;
-      if (physicalWidth <= 1080) return 1080;
-      if (physicalWidth <= 1920) return 1920;
-      if (physicalWidth <= 2560) return 2560;
-      return 3840; // 4K support
-    };
-
-    setHeroImageWidth(calculateWidth());
-
-    let timeoutId: ReturnType<typeof setTimeout>;
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setHeroImageWidth(calculateWidth());
-      }, 500); // Debounce to prevent rapid reloading
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeoutId);
-    };
-  }, []);
 
   // Security: Disable Right Click, Inspector Shortcuts, Print, and Save
   useEffect(() => {
@@ -73,26 +36,11 @@ const App: React.FC = () => {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // F12
-      if (e.key === 'F12') {
-        e.preventDefault();
-      }
-      // Ctrl+Shift+I (Inspect) or Ctrl+Shift+J (Console) or Ctrl+Shift+C (Inspect Element)
-      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
-        e.preventDefault();
-      }
-      // Ctrl+U (View Source)
-      if (e.ctrlKey && e.key === 'u') {
-        e.preventDefault();
-      }
-      // Ctrl+P (Print)
-      if (e.ctrlKey && e.key === 'p') {
-        e.preventDefault();
-      }
-      // Ctrl+S (Save)
-      if (e.ctrlKey && e.key === 's') {
-        e.preventDefault();
-      }
+      if (e.key === 'F12') e.preventDefault();
+      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) e.preventDefault();
+      if (e.ctrlKey && e.key === 'u') e.preventDefault();
+      if (e.ctrlKey && e.key === 'p') e.preventDefault();
+      if (e.ctrlKey && e.key === 's') e.preventDefault();
     };
 
     document.addEventListener('contextmenu', handleContextMenu);
@@ -104,22 +52,21 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Create a flat list of all images (main + gallery) from all projects.
+  // Create a flat list of all images, excluding 360-degree projects
   const allHeroImages: RandomImage[] = useMemo(() => {
-    return projects.flatMap(project => 
-      [
-        // Optimize hero images dynamically based on calculated heroImageWidth
-        { imageUrl: getOptimizedImage(project.imageUrl, heroImageWidth, 85), projectName: project.name },
-        ...project.galleryImages.map(galleryImg => ({
-          imageUrl: getOptimizedImage(galleryImg, heroImageWidth, 85),
-          projectName: project.name,
-        })),
-      ]
-    );
-  }, [projects, heroImageWidth]);
+    return projects
+      .filter(project => !project.is360) 
+      .flatMap(project => 
+        [
+          { imageUrl: getOptimizedImage(project.imageUrl, 1920, 85), projectName: project.name },
+          ...project.galleryImages.map(galleryImg => ({
+            imageUrl: getOptimizedImage(galleryImg, 1920, 85),
+            projectName: project.name,
+          })),
+        ]
+      );
+  }, [projects]);
 
-  // Handler to pick a random image from the pool (Auto-play logic)
-  // This is also used as the onSkip callback if an image is found to be portrait.
   const handleNextHeroImage = useCallback(() => {
     if (allHeroImages.length === 0) return;
     const randomIndex = Math.floor(Math.random() * allHeroImages.length);
@@ -127,20 +74,22 @@ const App: React.FC = () => {
   }, [allHeroImages.length]);
 
   useEffect(() => {
-    if (currentPage !== 'home' || allHeroImages.length === 0) {
+    if (currentPage !== 'home' || allHeroImages.length === 0 || isZenMode) {
       return;
     }
     const imageInterval = setInterval(handleNextHeroImage, 5000);
     return () => clearInterval(imageInterval);
-  }, [currentPage, handleNextHeroImage, allHeroImages.length]);
+  }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode]);
 
   const handleSelectProject = useCallback((project: Project) => {
     setSelectedProject(project);
     setCurrentPage('gallery');
+    setIsZenMode(false);
   }, []);
 
   const handleNavigate = useCallback((page: Page) => {
     setCurrentPage(page);
+    setIsZenMode(false);
     if (page !== 'gallery') {
       setSelectedProject(null);
     }
@@ -150,31 +99,32 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentPage) {
-      case 'about':
-        return <AboutSection content={aboutContent} />;
-      case 'services':
-        return <ServicesSection />;
-      case 'testimonials':
-        return <TestimonialsSection />;
-      case 'contact':
-        return <ContactSection />;
-      case 'gallery':
-        return selectedProject && <GalleryPage project={selectedProject} />;
-      default:
-        return null;
+      case 'about': return <AboutSection content={aboutContent} />;
+      case 'services': return <ServicesSection />;
+      case 'testimonials': return <TestimonialsSection />;
+      case 'contact': return <ContactSection />;
+      case 'gallery': return selectedProject && <GalleryPage project={selectedProject} />;
+      default: return null;
     }
   };
 
   return (
     <>
       <CustomCursor />
-      {showIntro && <IntroOverlay onComplete={() => setShowIntro(false)} />}
       {currentPage === 'home' ? (
-        <div className="h-[100dvh] overflow-hidden bg-gray-800 text-white font-sans antialiased">
-          <Header onNavigate={handleNavigate} page={currentPage} projects={projects} onSelectProject={handleSelectProject} />
+        <div className="h-[100dvh] overflow-hidden bg-black text-white font-sans antialiased">
+          <Header 
+            onNavigate={handleNavigate} 
+            page={currentPage} 
+            projects={projects} 
+            onSelectProject={handleSelectProject}
+            isZenMode={isZenMode}
+          />
           <Hero 
             image={currentHeroImage} 
             onSkip={handleNextHeroImage}
+            isZenMode={isZenMode}
+            onToggleZenMode={() => setIsZenMode(!isZenMode)}
           />
         </div>
       ) : (
