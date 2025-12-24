@@ -164,11 +164,11 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
       </header>
 
       {isMobileMenuOpen && (
-        <div className={`fixed inset-0 bg-white z-[200] text-gray-900 p-8 flex flex-col transform transition-transform duration-300 ease-in-out ${isMenuVisible ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="flex justify-end">
+        <div className={`fixed inset-0 bg-white z-[200] text-gray-900 p-8 flex flex-col transform transition-transform duration-300 ease-in-out overflow-y-auto scrollbar-hide ${isMenuVisible ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="flex justify-end mb-4 flex-shrink-0">
             <button onClick={closeMobileMenu} className="p-2 -m-2"><CloseIcon className="w-8 h-8 text-gray-900" /></button>
           </div>
-          <nav className="flex-grow flex flex-col pt-8 space-y-12">
+          <nav className="flex-grow flex flex-col pt-4 pb-12 space-y-12">
             <div>
               <div className="text-3xl font-light mb-4 uppercase tracking-widest text-gray-400">Work</div>
               <ul className="pl-2 space-y-4">
