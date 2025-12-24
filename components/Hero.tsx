@@ -25,9 +25,9 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isDesktop, setIsDesktop] = useState(true);
 
-  // Constants for high quality
-  const HIGH_RES_WIDTH = 2560;
-  const QUALITY = 90;
+  // Balanced high quality (2K is optimized for load speed vs resolution)
+  const HIGH_RES_WIDTH = 2048;
+  const QUALITY = 85;
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
@@ -39,7 +39,8 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
   useEffect(() => {
     if (!image) return;
 
-    const thumbUrl = getOptimizedImage(image.imageUrl, 100, 20, false);
+    // Use a very tiny thumb (40px) for near-instant "blur-up"
+    const thumbUrl = getOptimizedImage(image.imageUrl, 40, 10, false);
     const highResUrl = getOptimizedImage(image.imageUrl, HIGH_RES_WIDTH, QUALITY, true);
     
     const currentActive = activeSlot === 1 ? slot1 : slot2;
@@ -84,7 +85,9 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
       isReady: false
     };
 
+    // Slot management logic
     if (!slot1 && !slot2) {
+      // First load: Set Slot 1 with immediate thumbnail
       setSlot1(newState);
       setActiveSlot(1);
       
@@ -96,18 +99,22 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
       return () => { isCancelled = true; };
     }
 
-    const nextSlot = activeSlot === 1 ? 2 : 1;
-    if (nextSlot === 1) setSlot1(newState);
+    const nextSlotId = activeSlot === 1 ? 2 : 1;
+    if (nextSlotId === 1) setSlot1(newState);
     else setSlot2(newState);
 
     const preloader = new Image();
     preloader.src = highResUrl;
     preloader.onload = () => {
       if (isCancelled) return;
-      if (nextSlot === 1) setSlot1(prev => prev ? { ...prev, isReady: true } : null);
+      
+      // Update the slot to show the high-res image
+      if (nextSlotId === 1) setSlot1(prev => prev ? { ...prev, isReady: true } : null);
       else setSlot2(prev => prev ? { ...prev, isReady: true } : null);
+      
+      // Cross-fade to next slot
       setIsTransitioning(true);
-      setActiveSlot(nextSlot);
+      setActiveSlot(nextSlotId);
     };
 
     preloader.onerror = () => {
@@ -124,7 +131,7 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
     }
   }, [isTransitioning]);
 
-  const renderSlot = (data: HeroImageState | null, isActive: boolean, slotId: number) => {
+  const renderSlot = (data: HeroImageState | null, isActive: boolean) => {
     if (!data) return null;
 
     const zIndex = isActive ? 'z-20' : 'z-10';
@@ -140,12 +147,14 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
 
     return (
       <div className={`absolute inset-0 h-full w-full ${zIndex} ${opacityClass} ${transitionClass} overflow-hidden`}>
+        {/* Instant Blur layer */}
         <div 
-          className="absolute inset-0 w-full h-full bg-cover bg-center filter blur-2xl scale-110"
+          className="absolute inset-0 w-full h-full bg-cover bg-center filter blur-3xl scale-110"
           style={{ backgroundImage: `url(${data.thumbUrl})` }}
         />
+        {/* High fidelity layer */}
         <div 
-          className={`absolute inset-0 h-full w-full bg-cover bg-center animate-kenburns will-change-transform transition-opacity duration-1000 ${data.isReady ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 h-full w-full bg-cover bg-center animate-kenburns will-change-transform transition-opacity duration-[1500ms] ${data.isReady ? 'opacity-100' : 'opacity-0'}`}
           style={{ backgroundImage: `url(${data.highResUrl})` }}
         />
       </div>
@@ -153,22 +162,16 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
   };
 
   const activeProjectName = (activeSlot === 1 ? slot1 : slot2)?.projectName;
-
-  // Zen mode is only effective on desktop
   const effectiveZenMode = isZenMode && isDesktop;
 
   return (
     <main className="relative h-[100dvh] w-full overflow-hidden bg-black group/hero">
-      {renderSlot(slot1, activeSlot === 1, 1)}
-      {renderSlot(slot2, activeSlot === 2, 2)}
+      {renderSlot(slot1, activeSlot === 1)}
+      {renderSlot(slot2, activeSlot === 2)}
       
-      {/* Overlay gradient - fades out in Zen Mode */}
       <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none z-30 transition-opacity duration-1000 ${effectiveZenMode ? 'opacity-0' : 'opacity-100'}`} />
       
-      {/* Interface Layer */}
       <div className="absolute bottom-8 left-0 right-0 z-[60] flex items-center justify-center">
-        
-        {/* Project Title: Stays visible on mobile, hides on desktop zen */}
         <div className={`transition-all duration-1000 ${effectiveZenMode ? 'translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
           <div className="inline-block px-6 py-2 bg-black/40 backdrop-blur-sm rounded-full border border-white/10 shadow-lg">
             <h2 key={activeProjectName} className="text-xs sm:text-sm font-light tracking-[0.1em] sm:tracking-[0.2em] text-white uppercase text-center animate-contentFadeIn whitespace-nowrap">
@@ -177,7 +180,6 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
           </div>
         </div>
 
-        {/* Zen Toggle: Desktop Only (hidden on small screens) */}
         {onToggleZenMode && (
           <div className="hidden md:flex absolute right-8 items-center">
             <button
