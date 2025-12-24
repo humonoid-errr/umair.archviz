@@ -159,7 +159,7 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
       <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none z-30 transition-opacity duration-1000 ${isZenMode ? 'opacity-0' : 'opacity-100'}`} />
       
       {/* Bottom Interface Bar: Level Projects Name & Zen Mode */}
-      <div className="absolute bottom-8 left-0 right-0 z-[60] px-8 md:px-24 flex items-center justify-center">
+      <div className="absolute bottom-8 left-0 right-0 z-[60] flex items-center justify-center">
         
         {/* Project Title Container: Centered */}
         <div className={`transition-all duration-1000 ${isZenMode ? 'translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
@@ -170,9 +170,9 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
           </div>
         </div>
 
-        {/* Zen Toggle: Level with the title, positioned far right */}
+        {/* Zen Toggle: Level with the title, positioned at the extreme edge */}
         {onToggleZenMode && (
-          <div className="absolute right-8 md:right-24 flex items-center">
+          <div className="absolute right-4 md:right-8 flex items-center">
             <button
               onClick={onToggleZenMode}
               className={`p-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-black/60 transition-all duration-500 shadow-2xl group/zen cursor-pointer ${isZenMode ? 'opacity-40 hover:opacity-100' : 'opacity-100'}`}
