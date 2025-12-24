@@ -17,6 +17,7 @@ declare global {
 
 interface GalleryPageProps {
   project: Project;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 const ProgressiveImage: React.FC<{
@@ -90,7 +91,7 @@ const ProgressiveImage: React.FC<{
 };
 
 
-const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
+const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }) => {
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fullscreenContainerRef = useRef<HTMLDivElement>(null);
@@ -231,6 +232,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     setIsOverlayAnimationDone(false);
     setFullscreenIndex(index);
     setForcedOrientation('portrait');
+    onFullscreenChange?.(true);
   };
 
   const closeFullscreen = useCallback(() => {
@@ -245,7 +247,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     setIsOverlayAnimationDone(false);
     resetZoom();
     setForcedOrientation('portrait');
-  }, [resetZoom]);
+    onFullscreenChange?.(false);
+  }, [resetZoom, onFullscreenChange]);
 
   const toggleBrowserFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -600,11 +603,11 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
         <div 
           ref={fullscreenContainerRef}
           key={`fs-${project.id}-${fullscreenIndex}`}
-          className="fixed inset-0 bg-white z-50 flex items-center justify-center animate-fadeIn overflow-hidden"
+          className="fixed inset-0 bg-white z-[150] flex items-center justify-center animate-fadeIn overflow-hidden"
           onAnimationEnd={() => setIsOverlayAnimationDone(true)}
           onClick={closeFullscreen}
         >
-          <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-[60]">
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-[160]">
              {!is360Active && (
                 <button 
                   onClick={(e) => { 
@@ -642,7 +645,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             {zoomLevel <= 1 && (
               <button
                 onClick={handlePreviousClick}
-                className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-50 p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
+                className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-[150] p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
               >
                 <ChevronLeftIcon className="w-7 h-7 md:w-8 md:h-8 text-white md:text-gray-800" />
               </button>
@@ -707,13 +710,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             {zoomLevel <= 1 && (
               <button
                 onClick={handleNextClick}
-                className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-50 p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
+                className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-[150] p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
               >
-                <ChevronRightIcon className="w-7 h-7 md:w-8 md:h-8 text-white md:text-gray-800" />
+                <ChevronRightIcon className="w-7 h-7 md:w-8 h-8 text-white md:text-gray-800" />
               </button>
             )}
             
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4 w-full px-4" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[150] flex flex-col items-center gap-4 w-full px-4" onClick={(e) => e.stopPropagation()}>
                <div className="flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10">
                   <span className="text-white text-[10px] md:text-xs font-medium uppercase tracking-widest">Zoom</span>
                   <input 
