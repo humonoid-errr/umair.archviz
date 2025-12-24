@@ -40,11 +40,9 @@ const ProgressiveImage: React.FC<{
     setCurrentSrc('');
     setIsLoaded(false);
 
-    // Step 1: Immediate tiny placeholder (approx 1-2KB)
     const thumbSrc = getOptimizedImage(src, 30, 5, false, is360);
     setCurrentSrc(thumbSrc);
 
-    // Step 2: Optimized High Fidelity (Retina-aware)
     const isMobile = window.innerWidth < 768;
     const optimizedWidth = isMobile ? 1280 : 2048; 
     const optimizedSrc = getOptimizedImage(src, optimizedWidth, 85, true, is360);
@@ -56,8 +54,6 @@ const ProgressiveImage: React.FC<{
       setIsLoaded(true);
       if (onLoad) onLoad();
       
-      // Note: We skip the "Raw URL" step unless explicitly needed for 360s on desktop 
-      // as the 2048px optimized version is usually indistinguishable and much faster.
       if (is360 && !isMobile) {
         const rawImg = new Image();
         rawImg.src = getRawAssetUrl(src);
@@ -498,7 +494,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
   return (
     <>
       <section className="min-h-screen lg:h-screen w-full flex flex-col bg-white text-gray-800 pt-24 md:pt-32 overflow-x-hidden lg:overflow-y-hidden">
-        
         <div className="flex-grow w-full px-8 pb-16 lg:hidden border-t border-gray-300 pt-10">
           <div className="grid grid-cols-1 gap-8">
             {galleryImages.map((image, index) => (
@@ -602,7 +597,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
       {fullscreenIndex !== null && (
         <div 
           ref={fullscreenContainerRef}
-          key={`fs-${project.id}-${fullscreenIndex}`}
+          key={`fs-${project.id}`}
           className="fixed inset-0 bg-white z-[150] flex items-center justify-center animate-fadeIn overflow-hidden"
           onAnimationEnd={() => setIsOverlayAnimationDone(true)}
           onClick={closeFullscreen}
@@ -645,78 +640,92 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
             {zoomLevel <= 1 && (
               <button
                 onClick={handlePreviousClick}
-                className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-[150] p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
+                className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-[160] p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
               >
                 <ChevronLeftIcon className="w-7 h-7 md:w-8 md:h-8 text-white md:text-gray-800" />
               </button>
             )}
 
+            {/* Sliding Track for Fullscreen Images */}
             <div
-              className="w-full h-full flex items-center justify-center overflow-hidden touch-none"
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
-              style={{ cursor: zoomLevel > 1 && !is360Active ? 'grab' : 'default' }}
+              className="w-full h-full flex items-center transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) will-change-transform"
+              style={{ transform: `translateX(-${fullscreenIndex * 100}%)` }}
             >
-               <div className="max-w-full max-h-full w-full h-full flex items-center justify-center relative bg-gray-50">
-                   {is360Active && is360Loading && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center z-10 overflow-hidden bg-white">
-                        <div 
-                          className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 animate-kenburns opacity-60"
-                          style={{ backgroundImage: `url(${getOptimizedImage(galleryImages[fullscreenIndex], 40, 5, false)})` }}
-                        />
-                        <div className="relative flex flex-col items-center">
-                          <div className="relative w-20 h-20">
-                            <div className="absolute inset-0 border-2 border-gray-800 rounded-full animate-ping opacity-10" />
-                            <div className="absolute inset-0 border border-gray-800 rounded-full animate-pulse flex items-center justify-center">
-                               <div className="w-3 h-3 bg-gray-800 rounded-full" />
+              {galleryImages.map((image, index) => {
+                const isActive = index === fullscreenIndex;
+                const is360 = project.is360 || isImageUrl360(image);
+
+                return (
+                  <div 
+                    key={`fs-slide-${index}`}
+                    className="w-full h-full flex-shrink-0 flex items-center justify-center overflow-hidden touch-none"
+                    onPointerDown={isActive ? handlePointerDown : undefined}
+                    onPointerMove={isActive ? handlePointerMove : undefined}
+                    onPointerUp={isActive ? handlePointerUp : undefined}
+                    onPointerLeave={isActive ? handlePointerUp : undefined}
+                    style={{ cursor: isActive && zoomLevel > 1 && !is360Active ? 'grab' : 'default' }}
+                  >
+                    <div className="max-w-full max-h-full w-full h-full flex items-center justify-center relative bg-gray-50">
+                      {isActive && is360 && is360Loading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 overflow-hidden bg-white">
+                          <div 
+                            className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 animate-kenburns opacity-60"
+                            style={{ backgroundImage: `url(${getOptimizedImage(image, 40, 5, false)})` }}
+                          />
+                          <div className="relative flex flex-col items-center">
+                            <div className="relative w-20 h-20">
+                              <div className="absolute inset-0 border-2 border-gray-800 rounded-full animate-ping opacity-10" />
+                              <div className="absolute inset-0 border border-gray-800 rounded-full animate-pulse flex items-center justify-center">
+                                 <div className="w-3 h-3 bg-gray-800 rounded-full" />
+                              </div>
                             </div>
+                            <p className="mt-10 text-[10px] font-light tracking-[0.5em] uppercase text-gray-500 animate-pulse">
+                              Immersing...
+                            </p>
                           </div>
-                          <p className="mt-10 text-[10px] font-light tracking-[0.5em] uppercase text-gray-500 animate-pulse">
-                            Immersing...
-                          </p>
                         </div>
-                      </div>
-                   )}
-                   
-                   {is360Active ? (
-                      <div 
-                        ref={pannellumContainerRef} 
-                        className={`w-full h-full bg-black transition-opacity duration-700 ${is360Loading ? 'opacity-0' : 'opacity-100'}`} 
-                        onContextMenu={(e) => e.preventDefault()}
-                      />
-                   ) : (
-                      <div className="flex items-center justify-center w-full h-full">
-                        <ProgressiveImage
-                            src={galleryImages[fullscreenIndex]}
-                            alt={`${project.name} gallery image ${fullscreenIndex + 1} fullscreen`}
-                            loading="eager"
-                            draggable={false}
-                            onContextMenu={(e) => e.preventDefault()}
-                            className={`max-w-full max-h-full object-contain shadow-2xl transition-transform duration-500 ease-in-out`}
-                            style={{
-                              transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel}) ${forcedOrientation === 'landscape' ? 'rotate(90deg) scale(1.4)' : ''}`,
-                              transition: isDragging.current ? 'none' : 'transform 0.3s ease-out',
-                              transformOrigin: 'center center'
-                            }}
-                            isProject360={project.is360}
+                      )}
+
+                      {isActive && is360 ? (
+                        <div 
+                          ref={pannellumContainerRef} 
+                          className={`w-full h-full bg-black transition-opacity duration-700 ${is360Loading ? 'opacity-0' : 'opacity-100'}`} 
+                          onContextMenu={(e) => e.preventDefault()}
                         />
-                      </div>
-                   )}
-                </div>
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full">
+                          <ProgressiveImage
+                              src={image}
+                              alt={`${project.name} gallery image ${index + 1} fullscreen`}
+                              loading={isActive ? "eager" : "lazy"}
+                              draggable={false}
+                              onContextMenu={(e) => e.preventDefault()}
+                              className={`max-w-full max-h-full object-contain shadow-2xl transition-transform duration-500 ease-in-out`}
+                              style={isActive ? {
+                                transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel}) ${forcedOrientation === 'landscape' ? 'rotate(90deg) scale(1.4)' : ''}`,
+                                transition: isDragging.current ? 'none' : 'transform 0.3s ease-out',
+                                transformOrigin: 'center center'
+                              } : {}}
+                              isProject360={project.is360}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {zoomLevel <= 1 && (
               <button
                 onClick={handleNextClick}
-                className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-[150] p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
+                className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-[160] p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
               >
                 <ChevronRightIcon className="w-7 h-7 md:w-8 h-8 text-white md:text-gray-800" />
               </button>
             )}
             
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[150] flex flex-col items-center gap-4 w-full px-4" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[160] flex flex-col items-center gap-4 w-full px-4" onClick={(e) => e.stopPropagation()}>
                <div className="flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10">
                   <span className="text-white text-[10px] md:text-xs font-medium uppercase tracking-widest">Zoom</span>
                   <input 
