@@ -9,7 +9,6 @@ import { ChevronRightIcon } from './icons/ChevronRightIcon';
 import { ChevronUpIcon } from './icons/ChevronUpIcon';
 import { getOptimizedImage, getRawAssetUrl, isImageUrl360 } from '../utils/imageOptimizer';
 
-// Pannellum Type declaration for TS
 declare global {
   interface window {
     pannellum: any;
@@ -37,15 +36,17 @@ const ProgressiveImage: React.FC<{
   const is360 = isProject360 || isImageUrl360(src);
   
   useEffect(() => {
-    // Stage 1: Tiny blur-up thumbnail
-    const thumbSrc = getOptimizedImage(src, 50, 20, false, is360);
-    setCurrentSrc(thumbSrc);
+    setCurrentSrc('');
     setIsLoaded(false);
 
-    // Stage 2: Optimized high-res (DPR aware)
+    // Step 1: Immediate tiny placeholder (approx 1-2KB)
+    const thumbSrc = getOptimizedImage(src, 30, 5, false, is360);
+    setCurrentSrc(thumbSrc);
+
+    // Step 2: Optimized High Fidelity (Retina-aware)
     const isMobile = window.innerWidth < 768;
-    const optimizedWidth = isMobile ? 1200 : 2560; 
-    const optimizedSrc = getOptimizedImage(src, optimizedWidth, 90, true, is360);
+    const optimizedWidth = isMobile ? 1280 : 2048; 
+    const optimizedSrc = getOptimizedImage(src, optimizedWidth, 85, true, is360);
     
     const img = new Image();
     img.src = optimizedSrc;
@@ -54,12 +55,13 @@ const ProgressiveImage: React.FC<{
       setIsLoaded(true);
       if (onLoad) onLoad();
       
-      // Stage 3: Attempt to load raw URL for maximum clarity if not a 360 on desktop
-      if (!is360 && !isMobile) {
+      // Note: We skip the "Raw URL" step unless explicitly needed for 360s on desktop 
+      // as the 2048px optimized version is usually indistinguishable and much faster.
+      if (is360 && !isMobile) {
         const rawImg = new Image();
         rawImg.src = getRawAssetUrl(src);
         rawImg.onload = () => {
-          setCurrentSrc(rawImg.src);
+          if (is360) setCurrentSrc(rawImg.src);
         };
       }
     };
@@ -69,9 +71,9 @@ const ProgressiveImage: React.FC<{
     <div className="relative w-full h-full overflow-hidden flex items-center justify-center" style={style}>
        {!is360 && (
          <img
-            src={getOptimizedImage(src, 40, 10, false)}
+            src={getOptimizedImage(src, 30, 5, false)}
             alt=""
-            className={`absolute inset-0 w-full h-full object-cover filter blur-xl scale-110 transition-opacity duration-700 ease-in-out ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
+            className={`absolute inset-0 w-full h-full object-cover filter blur-3xl scale-110 transition-opacity duration-700 ease-in-out ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
             draggable={false}
           />
        )}
@@ -100,13 +102,11 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState(false);
   const [forcedOrientation, setForcedOrientation] = useState<'portrait' | 'landscape'>('portrait');
 
-  // Zoom and Pan State
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const lastPointerPos = useRef({ x: 0, y: 0 });
 
-  // 360 Viewer State
   const pannellumViewerRef = useRef<any>(null);
   const pannellumContainerRef = useRef<HTMLDivElement>(null);
   const [is360Active, setIs360Active] = useState(false);
@@ -137,7 +137,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     }
   }, []);
 
-  // Map Vertical Wheel to Horizontal Scroll in Main Gallery View
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -283,12 +282,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     setFullscreenIndex(isFirstImage ? galleryImages.length - 1 : fullscreenIndex - 1);
   }, [fullscreenIndex, galleryImages.length, resetZoom]);
 
-  // Combined Sync Handler for UI -> Model
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newZoom = parseFloat(e.target.value);
     setZoomLevel(newZoom);
     if (is360Active && pannellumViewerRef.current) {
-      // Map Zoom (1 to 3.25) back to HFOV (100 to 10)
       const hfov = 100 - (newZoom - 1) * 40; 
       pannellumViewerRef.current.setHfov(hfov, false); 
     }
@@ -297,17 +294,15 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     }
   };
 
-  // Improved Universal Wheel Zoom Sync for 2D images
   useEffect(() => {
     const container = fullscreenContainerRef.current;
     if (!container || fullscreenIndex === null) return;
 
     const handleWheelZoom = (e: WheelEvent) => {
-      // If 360 is active, native Pannellum handles it; we poll its state in the RAF loop
       if (is360Active) return;
 
       e.preventDefault();
-      const zoomStep = 0.1; // Finer control
+      const zoomStep = 0.1;
       const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
       
       setZoomLevel(prev => {
@@ -321,7 +316,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     return () => container.removeEventListener('wheel', handleWheelZoom);
   }, [is360Active, fullscreenIndex]);
 
-  // Refined High-Frequency 360 Zoom Sync (Model -> UI)
   useEffect(() => {
     let rafId: number;
     const sync360Zoom = () => {
@@ -329,10 +323,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
         try {
           const currentHfov = pannellumViewerRef.current.getHfov();
           if (currentHfov !== undefined) {
-            // Precise mapping: HFOV 100 -> Zoom 1, HFOV 10 -> Zoom 3.25
             const calculatedZoom = 1 + (100 - currentHfov) / 40;
-            
-            // Only update if change is significant to avoid state churn
             setZoomLevel(prev => {
               const diff = Math.abs(prev - calculatedZoom);
               return diff > 0.0005 ? calculatedZoom : prev;
@@ -368,7 +359,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             pannellumViewerRef.current = null;
           }
           const isMobile = window.innerWidth < 1024;
-          
           const cacheBuster = `refresh-${Date.now()}`;
           
           const panoramaUrl = isMobile 
@@ -395,15 +385,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
               if (pannellumViewerRef.current) {
                 pannellumViewerRef.current.resize();
                 setTimeout(() => pannellumViewerRef.current?.resize(), 100);
-                setTimeout(() => pannellumViewerRef.current?.resize(), 500);
               }
             });
-            pannellumViewerRef.current.on('error', (err: any) => {
-              console.error('Pannellum Error:', err);
+            pannellumViewerRef.current.on('error', () => {
               setIs360Loading(false);
             });
           } catch (e) {
-            console.error('Failed to init Pannellum:', e);
             setIs360Loading(false);
           }
         }
@@ -492,7 +479,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   };
 
   const handleSliderWheel = (e: React.WheelEvent) => {
-    e.stopPropagation(); // Don't let the container zoom as well
+    e.stopPropagation(); 
     const step = 0.05;
     const delta = e.deltaY > 0 ? -step : step;
     const newZoom = Math.min(Math.max(zoomLevel + delta, 1), 3.25);
@@ -509,12 +496,11 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     <>
       <section className="min-h-screen lg:h-screen w-full flex flex-col bg-white text-gray-800 pt-24 md:pt-32 overflow-x-hidden lg:overflow-y-hidden">
         
-        {/* Mobile: Vertical Grid */}
         <div className="flex-grow w-full px-8 pb-16 lg:hidden border-t border-gray-300 pt-10">
           <div className="grid grid-cols-1 gap-8">
             {galleryImages.map((image, index) => (
               <div 
-                key={index} 
+                key={`${project.id}-${index}`} 
                 className="relative w-full cursor-pointer group overflow-hidden rounded-sm flex items-center justify-center bg-gray-50 min-h-[200px]"
                 onClick={() => openFullscreen(index)}
               >
@@ -541,7 +527,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           </div>
         </div>
 
-        {/* Desktop: Horizontal Scroll */}
         <div className="hidden lg:block flex-grow w-full relative group/gallery border-t border-gray-300">
            <div 
               ref={scrollContainerRef}
@@ -549,7 +534,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             >
               {galleryImages.map((image, index) => (
                 <div 
-                  key={index} 
+                  key={`${project.id}-${index}`} 
                   className="group/image flex-shrink-0 snap-center w-auto h-full first:pl-16 last:pr-16 overflow-hidden flex items-center justify-center"
                 >
                   <div className="relative h-full w-auto transition-transform duration-100 ease-linear will-change-transform">
@@ -614,13 +599,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
       {fullscreenIndex !== null && (
         <div 
           ref={fullscreenContainerRef}
+          key={`fs-${project.id}-${fullscreenIndex}`}
           className="fixed inset-0 bg-white z-50 flex items-center justify-center animate-fadeIn overflow-hidden"
           onAnimationEnd={() => setIsOverlayAnimationDone(true)}
           onClick={closeFullscreen}
         >
-          {/* Top Controls Bar - Compact and refined */}
           <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-[60]">
-             {/* Orientation Toggle (Mobile Only) - With clear label */}
              {!is360Active && (
                 <button 
                   onClick={(e) => { 
@@ -655,7 +639,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           </div>
           
           <div className="relative w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            {/* Arrows: Prominent on mobile (smaller), reactive on desktop. Now persistent in browser fullscreen. */}
             {zoomLevel <= 1 && (
               <button
                 onClick={handlePreviousClick}
@@ -678,7 +661,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                       <div className="absolute inset-0 flex flex-col items-center justify-center z-10 overflow-hidden bg-white">
                         <div 
                           className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 animate-kenburns opacity-60"
-                          style={{ backgroundImage: `url(${getOptimizedImage(galleryImages[fullscreenIndex], 100, 10, false)})` }}
+                          style={{ backgroundImage: `url(${getOptimizedImage(galleryImages[fullscreenIndex], 40, 5, false)})` }}
                         />
                         <div className="relative flex flex-col items-center">
                           <div className="relative w-20 h-20">
@@ -730,9 +713,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
               </button>
             )}
             
-            {/* Bottom Controls Container */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4 w-full px-4" onClick={(e) => e.stopPropagation()}>
-               {/* Zoom Slider */}
                <div className="flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10">
                   <span className="text-white text-[10px] md:text-xs font-medium uppercase tracking-widest">Zoom</span>
                   <input 
