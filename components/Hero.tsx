@@ -12,39 +12,47 @@ interface HeroProps {
   onToggleZenMode?: () => void;
 }
 
+interface HeroImageState extends RandomImage {
+  highResUrl: string;
+  thumbUrl: string;
+  isReady: boolean;
+}
+
 const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZenMode }) => {
-  const [img1, setImg1] = useState<RandomImage | null>(null);
-  const [img2, setImg2] = useState<RandomImage | null>(null);
+  const [slot1, setSlot1] = useState<HeroImageState | null>(null);
+  const [slot2, setSlot2] = useState<HeroImageState | null>(null);
   const [activeSlot, setActiveSlot] = useState<1 | 2>(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  // Constants for high quality
+  const HIGH_RES_WIDTH = 2560;
+  const QUALITY = 90;
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (!image) return;
 
-    // Standard optimization for hero (reduced size/quality for better transition speed)
-    const optimizedUrl = getOptimizedImage(image.imageUrl, 1600, 75);
+    const thumbUrl = getOptimizedImage(image.imageUrl, 100, 20, false);
+    const highResUrl = getOptimizedImage(image.imageUrl, HIGH_RES_WIDTH, QUALITY, true);
     
-    const currentUrl = activeSlot === 1 ? img1?.imageUrl : img2?.imageUrl;
-    if (optimizedUrl === currentUrl) return;
+    const currentActive = activeSlot === 1 ? slot1 : slot2;
+    if (image.imageUrl === currentActive?.imageUrl && currentActive.isReady) return;
 
     let isCancelled = false;
-    const preloader = new Image();
-    preloader.src = optimizedUrl;
 
-    preloader.onload = () => {
-      if (isCancelled) return;
-      
+    const validateImage = (): boolean => {
       const url = decodeURIComponent(image.imageUrl);
-      const isPortrait = preloader.naturalHeight > preloader.naturalWidth;
-      const isMobile = window.innerWidth < 768; 
-      const is360 = isImageUrl360(url);
+      const isMobile = window.innerWidth < 768;
+      
+      if (isImageUrl360(url)) return false;
 
-      if (is360) {
-        if (onSkip) onSkip();
-        return;
-      }
-
-      // Desktop Exclusion Logic
       if (!isMobile) {
         const desktopBlacklist = [
           'apartment%20sanskar', 'apartment sanskar',
@@ -59,39 +67,55 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
           'modern%20minimilist/4.jpg', 'modern minimilist/4.jpg',
           'modern%20minimilist/5.jpg', 'modern minimilist/5.jpg',
         ];
-
-        const isBlacklisted = desktopBlacklist.some(pattern => url.includes(pattern));
-        if (isPortrait || isBlacklisted) {
-          if (onSkip) onSkip();
-          return;
-        }
+        if (desktopBlacklist.some(pattern => url.includes(pattern))) return false;
       }
+      return true;
+    };
 
-      const newImageData = { ...image, imageUrl: optimizedUrl };
+    if (!validateImage()) {
+      onSkip?.();
+      return;
+    }
 
-      if (!img1 && !img2) {
-        setImg1(newImageData);
-        setActiveSlot(1);
-        return;
-      }
+    const newState: HeroImageState = {
+      ...image,
+      thumbUrl,
+      highResUrl,
+      isReady: false
+    };
+
+    if (!slot1 && !slot2) {
+      setSlot1(newState);
+      setActiveSlot(1);
       
+      const preloader = new Image();
+      preloader.src = highResUrl;
+      preloader.onload = () => {
+        if (!isCancelled) setSlot1(prev => prev ? { ...prev, isReady: true } : null);
+      };
+      return () => { isCancelled = true; };
+    }
+
+    const nextSlot = activeSlot === 1 ? 2 : 1;
+    if (nextSlot === 1) setSlot1(newState);
+    else setSlot2(newState);
+
+    const preloader = new Image();
+    preloader.src = highResUrl;
+    preloader.onload = () => {
+      if (isCancelled) return;
+      if (nextSlot === 1) setSlot1(prev => prev ? { ...prev, isReady: true } : null);
+      else setSlot2(prev => prev ? { ...prev, isReady: true } : null);
       setIsTransitioning(true);
-      if (activeSlot === 1) {
-        setImg2(newImageData);
-        setActiveSlot(2);
-      } else {
-        setImg1(newImageData);
-        setActiveSlot(1);
-      }
+      setActiveSlot(nextSlot);
     };
 
     preloader.onerror = () => {
-      if (isCancelled) return;
-      if (onSkip) onSkip();
+      if (!isCancelled) onSkip?.();
     };
-    
+
     return () => { isCancelled = true; };
-  }, [image, img1, img2, activeSlot, onSkip]);
+  }, [image, onSkip]);
 
   useEffect(() => {
     if (isTransitioning) {
@@ -100,69 +124,52 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
     }
   }, [isTransitioning]);
 
-  const getSlotClasses = (slotNumber: 1 | 2) => {
-    const isActive = activeSlot === slotNumber;
+  const renderSlot = (data: HeroImageState | null, isActive: boolean, slotId: number) => {
+    if (!data) return null;
+
     const zIndex = isActive ? 'z-20' : 'z-10';
-    let stateClasses = '';
-    let transitionClasses = '';
+    let opacityClass = 'opacity-0';
+    let transitionClass = 'transition-opacity duration-[2000ms] ease-in-out';
 
     if (isActive) {
-        stateClasses = 'opacity-100';
-        transitionClasses = 'transition-opacity duration-[2000ms] ease-in-out';
+      opacityClass = 'opacity-100';
     } else if (isTransitioning) {
-        stateClasses = 'opacity-100';
-        transitionClasses = 'transition-none';
-    } else {
-        stateClasses = 'opacity-0';
-        transitionClasses = 'transition-opacity duration-[1000ms] ease-in-out';
+      opacityClass = 'opacity-100';
+      transitionClass = 'transition-none';
     }
 
-    return `absolute inset-0 h-full w-full ${zIndex} ${stateClasses} ${transitionClasses} overflow-hidden`;
-  };
-
-  const renderSlotContent = (imgData: RandomImage | null) => {
-    if (!imgData) return null;
-    
-    const thumbUrl = getOptimizedImage(imgData.imageUrl, 50, 10, false);
-
     return (
-      <div className="relative w-full h-full">
+      <div className={`absolute inset-0 h-full w-full ${zIndex} ${opacityClass} ${transitionClass} overflow-hidden`}>
         <div 
-          className="absolute inset-0 w-full h-full bg-cover bg-center filter blur-2xl scale-110 opacity-70"
-          style={{ backgroundImage: `url(${thumbUrl})` }}
+          className="absolute inset-0 w-full h-full bg-cover bg-center filter blur-2xl scale-110"
+          style={{ backgroundImage: `url(${data.thumbUrl})` }}
         />
-        
         <div 
-          className="absolute inset-0 h-full w-full bg-cover bg-center animate-kenburns will-change-transform"
-          style={{ backgroundImage: `url(${imgData.imageUrl})` }}
+          className={`absolute inset-0 h-full w-full bg-cover bg-center animate-kenburns will-change-transform transition-opacity duration-1000 ${data.isReady ? 'opacity-100' : 'opacity-0'}`}
+          style={{ backgroundImage: `url(${data.highResUrl})` }}
         />
       </div>
     );
   };
 
-  const activeProjectName = (activeSlot === 1 ? img1 : img2)?.projectName;
+  const activeProjectName = (activeSlot === 1 ? slot1 : slot2)?.projectName;
 
-  if (!img1 && !img2) {
-    return <main className="relative h-[100dvh] w-full bg-black" />;
-  }
-  
+  // Zen mode is only effective on desktop
+  const effectiveZenMode = isZenMode && isDesktop;
+
   return (
     <main className="relative h-[100dvh] w-full overflow-hidden bg-black group/hero">
-      <div className={getSlotClasses(1)}>
-        {renderSlotContent(img1)}
-      </div>
-      <div className={getSlotClasses(2)}>
-        {renderSlotContent(img2)}
-      </div>
+      {renderSlot(slot1, activeSlot === 1, 1)}
+      {renderSlot(slot2, activeSlot === 2, 2)}
       
-      {/* Overlay gradient */}
-      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none z-30 transition-opacity duration-1000 ${isZenMode ? 'opacity-0' : 'opacity-100'}`} />
+      {/* Overlay gradient - fades out in Zen Mode */}
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none z-30 transition-opacity duration-1000 ${effectiveZenMode ? 'opacity-0' : 'opacity-100'}`} />
       
-      {/* Bottom Interface Bar: Level Projects Name & Zen Mode */}
+      {/* Interface Layer */}
       <div className="absolute bottom-8 left-0 right-0 z-[60] flex items-center justify-center">
         
-        {/* Project Title Container: Centered */}
-        <div className={`transition-all duration-1000 ${isZenMode ? 'translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
+        {/* Project Title: Stays visible on mobile, hides on desktop zen */}
+        <div className={`transition-all duration-1000 ${effectiveZenMode ? 'translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
           <div className="inline-block px-6 py-2 bg-black/40 backdrop-blur-sm rounded-full border border-white/10 shadow-lg">
             <h2 key={activeProjectName} className="text-xs sm:text-sm font-light tracking-[0.1em] sm:tracking-[0.2em] text-white uppercase text-center animate-contentFadeIn whitespace-nowrap">
               {activeProjectName}
@@ -170,20 +177,18 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZ
           </div>
         </div>
 
-        {/* Zen Toggle: Level with the title, positioned at the extreme edge */}
+        {/* Zen Toggle: Desktop Only (hidden on small screens) */}
         {onToggleZenMode && (
-          <div className="absolute right-4 md:right-8 flex items-center">
+          <div className="hidden md:flex absolute right-8 items-center">
             <button
               onClick={onToggleZenMode}
-              className={`p-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-black/60 transition-all duration-500 shadow-2xl group/zen cursor-pointer ${isZenMode ? 'opacity-40 hover:opacity-100' : 'opacity-100'}`}
-              aria-label={isZenMode ? "Exit Zen Mode" : "Enter Zen Mode"}
+              className={`p-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-black/60 transition-all duration-500 shadow-2xl group/zen cursor-pointer ${effectiveZenMode ? 'opacity-40 hover:opacity-100' : 'opacity-100'}`}
+              aria-label={effectiveZenMode ? "Exit Zen Mode" : "Enter Zen Mode"}
             >
               <div className="relative">
-                {isZenMode ? <MinimizeIcon className="w-5 h-5" /> : <FullscreenIcon className="w-5 h-5" />}
-                
-                {/* Minimal Label that appears on hover */}
+                {effectiveZenMode ? <MinimizeIcon className="w-5 h-5" /> : <FullscreenIcon className="w-5 h-5" />}
                 <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 text-[9px] uppercase font-light tracking-[0.2em] opacity-0 group-hover/zen:opacity-100 transition-all duration-300 whitespace-nowrap bg-black/60 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md pointer-events-none translate-x-4 group-hover/zen:translate-x-0">
-                   {isZenMode ? "Exit Zen" : "Zen Mode"}
+                   {effectiveZenMode ? "Exit Zen" : "Zen Mode"}
                 </span>
               </div>
             </button>
