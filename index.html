@@ -2,20 +2,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta name="google-site-verification" content="dqzGnzFHUfh7WP-G6_laOsIlt8_XuLlo1ugmjz6vVXk" />
     <meta charset="UTF-8" />
-    <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-FPT820HXJB"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-FPT820HXJB');
-</script>
-<!-- End Google Analytics -->
-   <link rel="icon" type="image/png" href="001.svg?v=1">
-   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>umair.archviz</title>
     <!-- Pannellum 360 Viewer -->
@@ -63,23 +51,32 @@
         width: 3px;
         height: 3px;
       }
-
+      
       ::-webkit-scrollbar-track {
         background: transparent;
       }
-
+      
       ::-webkit-scrollbar-thumb {
         background: rgba(0, 0, 0, 0.1);
         border-radius: 10px;
         transition: background 0.3s;
       }
-
+      
       ::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 0, 0, 0.3);
       }
 
       ::-webkit-scrollbar-button {
         display: none;
+      }
+
+      /* Utility to hide scrollbar */
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
       }
 
       /* Firefox Support */
@@ -122,7 +119,7 @@
           cursor: none !important;
         }
       }
-      
+
       /* Custom Pannellum UI Overrides */
       .pnlm-container {
         background: transparent !important;
@@ -146,7 +143,6 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
