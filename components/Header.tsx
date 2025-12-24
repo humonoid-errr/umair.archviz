@@ -19,10 +19,17 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
   const [isWorkMenuOpen, setIsWorkMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
   const workMenuRef = useRef<HTMLDivElement>(null);
   
-  // Every page except 'home' has a white background, so text must be dark
   const isLightPage = page !== 'home';
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -53,9 +60,12 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
   };
 
   const getHeaderClasses = () => {
-    // Changed 'absolute' to 'fixed' to ensure it stays at the top during scroll
     const baseClasses = "fixed top-0 left-0 right-0 z-[100] group transition-all duration-1000 ease-in-out";
-    const visibilityClasses = isZenMode ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100";
+    
+    // Zen Mode only hides header on desktop
+    const isZenHidden = isZenMode && isDesktop;
+    const visibilityClasses = isZenHidden ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100";
+    
     return `${baseClasses} ${visibilityClasses} py-8 md:py-12 px-8 md:px-24`;
   };
   
