@@ -13,9 +13,17 @@ interface HeaderProps {
   projects: Project[];
   onSelectProject: (project: Project) => void;
   isZenMode?: boolean;
+  forceHide?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectProject, isZenMode = false }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  onNavigate, 
+  page, 
+  projects, 
+  onSelectProject, 
+  isZenMode = false,
+  forceHide = false
+}) => {
   const [isWorkMenuOpen, setIsWorkMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -62,9 +70,9 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
   const getHeaderClasses = () => {
     const baseClasses = "fixed top-0 left-0 right-0 z-[100] group transition-all duration-1000 ease-in-out";
     
-    // Zen Mode only hides header on desktop
-    const isZenHidden = isZenMode && isDesktop;
-    const visibilityClasses = isZenHidden ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100";
+    // Hide header if forceHide is true (Fullscreen Gallery) or if Zen Mode is on (Desktop only)
+    const shouldHide = forceHide || (isZenMode && isDesktop);
+    const visibilityClasses = shouldHide ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100";
     
     return `${baseClasses} ${visibilityClasses} py-8 md:py-12 px-8 md:px-24`;
   };
