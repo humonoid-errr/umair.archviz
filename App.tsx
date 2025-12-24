@@ -8,6 +8,7 @@ import ServicesSection from './components/ServicesSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import GalleryPage from './components/GalleryPage';
 import CustomCursor from './components/CustomCursor';
+import SplashScreen from './components/SplashScreen';
 import { initialProjects } from './constants';
 import { Project, RandomImage } from './types';
 import { initialAboutContent } from './constants/initialContent';
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isZenMode, setIsZenMode] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
@@ -36,7 +38,6 @@ const App: React.FC = () => {
           })),
         ];
         
-        // Final sanity check: filter out individual images that might be panoramas
         return potentialImages
           .filter(img => !isImageUrl360(img.imageUrl))
           .map(img => ({
@@ -46,17 +47,12 @@ const App: React.FC = () => {
       });
   }, [projects]);
 
-  // Initialize with a random index based on the filtered list
   const [currentHeroImageIndex, setCurrentHeroImageIndex] = useState(() => {
     return allHeroImages.length > 0 ? Math.floor(Math.random() * allHeroImages.length) : 0;
   });
 
-  // Security: Disable Right Click, Inspector Shortcuts, Print, and Save
   useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-    };
-
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F12') e.preventDefault();
       if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) e.preventDefault();
@@ -64,10 +60,8 @@ const App: React.FC = () => {
       if (e.ctrlKey && e.key === 'p') e.preventDefault();
       if (e.ctrlKey && e.key === 's') e.preventDefault();
     };
-
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
@@ -81,12 +75,12 @@ const App: React.FC = () => {
   }, [allHeroImages.length]);
 
   useEffect(() => {
-    if (currentPage !== 'home' || allHeroImages.length === 0 || isZenMode) {
+    if (currentPage !== 'home' || allHeroImages.length === 0 || isZenMode || showSplash) {
       return;
     }
     const imageInterval = setInterval(handleNextHeroImage, 5000);
     return () => clearInterval(imageInterval);
-  }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode]);
+  }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode, showSplash]);
 
   const handleSelectProject = useCallback((project: Project) => {
     setSelectedProject(project);
@@ -115,6 +109,10 @@ const App: React.FC = () => {
     }
   };
 
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
   return (
     <>
       <CustomCursor />
@@ -135,9 +133,9 @@ const App: React.FC = () => {
           />
         </div>
       ) : (
-        <div className="font-sans antialiased bg-white">
+        <div className="font-sans antialiased bg-white min-h-screen flex flex-col">
           <Header onNavigate={handleNavigate} page={currentPage} projects={projects} onSelectProject={handleSelectProject} />
-          <main key={currentPage} className="animate-contentFadeIn">
+          <main key={currentPage} className="animate-contentFadeIn flex-grow">
             {renderContent()}
           </main>
         </div>
