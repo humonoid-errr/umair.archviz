@@ -11,7 +11,7 @@ import CustomCursor from './components/CustomCursor';
 import { initialProjects } from './constants';
 import { Project, RandomImage } from './types';
 import { initialAboutContent } from './constants/initialContent';
-import { getOptimizedImage } from './utils/imageOptimizer';
+import { getOptimizedImage, isImageUrl360 } from './utils/imageOptimizer';
 
 export type Page = 'home' | 'about' | 'services' | 'testimonials' | 'contact' | 'gallery';
 
@@ -20,14 +20,36 @@ const App: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isZenMode, setIsZenMode] = useState(false);
   
-  // Initialize with a random index
-  const [currentHeroImageIndex, setCurrentHeroImageIndex] = useState(() => {
-    const totalImages = initialProjects.reduce((acc, project) => acc + 1 + project.galleryImages.length, 0);
-    return totalImages > 0 ? Math.floor(Math.random() * totalImages) : 0;
-  });
-  
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
+
+  // Create a flat list of all images, strictly excluding anything 360-related
+  const allHeroImages: RandomImage[] = useMemo(() => {
+    return projects
+      .filter(project => !project.is360) 
+      .flatMap(project => {
+        const potentialImages = [
+          { imageUrl: project.imageUrl, projectName: project.name },
+          ...project.galleryImages.map(galleryImg => ({
+            imageUrl: galleryImg,
+            projectName: project.name,
+          })),
+        ];
+        
+        // Final sanity check: filter out individual images that might be panoramas
+        return potentialImages
+          .filter(img => !isImageUrl360(img.imageUrl))
+          .map(img => ({
+            ...img,
+            imageUrl: getOptimizedImage(img.imageUrl, 1920, 85)
+          }));
+      });
+  }, [projects]);
+
+  // Initialize with a random index based on the filtered list
+  const [currentHeroImageIndex, setCurrentHeroImageIndex] = useState(() => {
+    return allHeroImages.length > 0 ? Math.floor(Math.random() * allHeroImages.length) : 0;
+  });
 
   // Security: Disable Right Click, Inspector Shortcuts, Print, and Save
   useEffect(() => {
@@ -51,21 +73,6 @@ const App: React.FC = () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-  // Create a flat list of all images, excluding 360-degree projects
-  const allHeroImages: RandomImage[] = useMemo(() => {
-    return projects
-      .filter(project => !project.is360) 
-      .flatMap(project => 
-        [
-          { imageUrl: getOptimizedImage(project.imageUrl, 1920, 85), projectName: project.name },
-          ...project.galleryImages.map(galleryImg => ({
-            imageUrl: getOptimizedImage(galleryImg, 1920, 85),
-            projectName: project.name,
-          })),
-        ]
-      );
-  }, [projects]);
 
   const handleNextHeroImage = useCallback(() => {
     if (allHeroImages.length === 0) return;
