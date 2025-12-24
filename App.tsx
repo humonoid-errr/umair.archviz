@@ -8,7 +8,6 @@ import ServicesSection from './components/ServicesSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import GalleryPage from './components/GalleryPage';
 import CustomCursor from './components/CustomCursor';
-import SplashScreen from './components/SplashScreen';
 import { initialProjects } from './constants';
 import { Project, RandomImage } from './types';
 import { initialAboutContent } from './constants/initialContent';
@@ -20,7 +19,6 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isZenMode, setIsZenMode] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
   
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
@@ -42,7 +40,8 @@ const App: React.FC = () => {
           .filter(img => !isImageUrl360(img.imageUrl))
           .map(img => ({
             ...img,
-            imageUrl: getOptimizedImage(img.imageUrl, 1920, 85)
+            imageUrl: img.imageUrl, // Pass raw here, Hero handles optimization
+            projectName: img.projectName
           }));
       });
   }, [projects]);
@@ -75,12 +74,12 @@ const App: React.FC = () => {
   }, [allHeroImages.length]);
 
   useEffect(() => {
-    if (currentPage !== 'home' || allHeroImages.length === 0 || isZenMode || showSplash) {
+    if (currentPage !== 'home' || allHeroImages.length === 0 || isZenMode) {
       return;
     }
     const imageInterval = setInterval(handleNextHeroImage, 5000);
     return () => clearInterval(imageInterval);
-  }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode, showSplash]);
+  }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode]);
 
   const handleSelectProject = useCallback((project: Project) => {
     setSelectedProject(project);
@@ -108,10 +107,6 @@ const App: React.FC = () => {
       default: return null;
     }
   };
-
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
-  }
 
   return (
     <>
