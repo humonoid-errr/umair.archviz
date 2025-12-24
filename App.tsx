@@ -25,7 +25,6 @@ const App: React.FC = () => {
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
 
-  // Create a flat list of all images, strictly excluding anything 360-related
   const allHeroImages: RandomImage[] = useMemo(() => {
     return projects
       .filter(project => !project.is360) 
@@ -42,7 +41,7 @@ const App: React.FC = () => {
           .filter(img => !isImageUrl360(img.imageUrl))
           .map(img => ({
             ...img,
-            imageUrl: img.imageUrl, // Pass raw here, Hero handles optimization
+            imageUrl: img.imageUrl,
             projectName: img.projectName
           }));
       });
@@ -51,6 +50,17 @@ const App: React.FC = () => {
   const [currentHeroImageIndex, setCurrentHeroImageIndex] = useState(() => {
     return allHeroImages.length > 0 ? Math.floor(Math.random() * allHeroImages.length) : 0;
   });
+
+  // Pre-cache first few images during intro for instant landing experience
+  useEffect(() => {
+    if (showIntro && allHeroImages.length > 0) {
+      const imagesToPrecache = allHeroImages.slice(0, 5);
+      imagesToPrecache.forEach(img => {
+        const preloader = new Image();
+        preloader.src = getOptimizedImage(img.imageUrl, 2048, 85);
+      });
+    }
+  }, [showIntro, allHeroImages]);
 
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
@@ -71,15 +81,15 @@ const App: React.FC = () => {
 
   const handleNextHeroImage = useCallback(() => {
     if (allHeroImages.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * allHeroImages.length);
-    setCurrentHeroImageIndex(randomIndex);
-  }, [allHeroImages.length]);
+    const nextIndex = (currentHeroImageIndex + 1) % allHeroImages.length;
+    setCurrentHeroImageIndex(nextIndex);
+  }, [allHeroImages.length, currentHeroImageIndex]);
 
   useEffect(() => {
     if (currentPage !== 'home' || allHeroImages.length === 0 || isZenMode || showIntro) {
       return;
     }
-    const imageInterval = setInterval(handleNextHeroImage, 5000);
+    const imageInterval = setInterval(handleNextHeroImage, 6000); // Slightly longer interval for better appreciation
     return () => clearInterval(imageInterval);
   }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode, showIntro]);
 
