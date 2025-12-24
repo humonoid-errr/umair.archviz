@@ -98,6 +98,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState(false);
+  const [forcedOrientation, setForcedOrientation] = useState<'portrait' | 'landscape'>('portrait');
 
   // Zoom and Pan State
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -230,6 +231,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     resetZoom();
     setIsOverlayAnimationDone(false);
     setFullscreenIndex(index);
+    setForcedOrientation('portrait');
   };
 
   const closeFullscreen = useCallback(() => {
@@ -243,6 +245,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
     setFullscreenIndex(null);
     setIsOverlayAnimationDone(false);
     resetZoom();
+    setForcedOrientation('portrait');
   }, [resetZoom]);
 
   const toggleBrowserFullscreen = useCallback(() => {
@@ -599,7 +602,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
         </footer>
       </section>
       
-      {/* ... (rest of the component remains exactly as it was, including the fullscreen overlay) ... */}
       <button
         onClick={scrollToTop}
         className={`fixed bottom-8 right-8 z-30 p-3 bg-black/80 backdrop-blur-sm border border-white/10 shadow-xl rounded-full text-white transition-all duration-300 lg:hidden hover:scale-110 active:scale-95 ${
@@ -635,13 +637,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           </div>
           
           <div className="relative w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            {/* Arrows: Prominent on mobile, reactive on desktop. Hidden in browser fullscreen for max view immersion. */}
+            {/* Arrows: Prominent on mobile (smaller), reactive on desktop. Hidden in browser fullscreen. */}
             {zoomLevel <= 1 && !isBrowserFullscreen && (
               <button
                 onClick={handlePreviousClick}
-                className={`absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 md:bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[2px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
+                className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-50 p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
               >
-                <ChevronLeftIcon className="w-10 h-10 md:w-8 md:h-8 text-white md:text-gray-800" />
+                <ChevronLeftIcon className="w-7 h-7 md:w-8 md:h-8 text-white md:text-gray-800" />
               </button>
             )}
 
@@ -656,12 +658,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                <div className="max-w-full max-h-full w-full h-full flex items-center justify-center relative bg-gray-50">
                    {is360Active && is360Loading && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center z-10 overflow-hidden bg-white">
-                        {/* Moving Blurred Background */}
                         <div 
                           className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 animate-kenburns opacity-60"
                           style={{ backgroundImage: `url(${getOptimizedImage(galleryImages[fullscreenIndex], 100, 10, false)})` }}
                         />
-                        {/* Pulsating Loader */}
                         <div className="relative flex flex-col items-center">
                           <div className="relative w-20 h-20">
                             <div className="absolute inset-0 border-2 border-gray-800 rounded-full animate-ping opacity-10" />
@@ -690,10 +690,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                             loading="eager"
                             draggable={false}
                             onContextMenu={(e) => e.preventDefault()}
-                            className="max-w-full max-h-full object-contain shadow-2xl"
+                            className={`max-w-full max-h-full object-contain shadow-2xl transition-transform duration-500 ease-in-out`}
                             style={{
-                              transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
-                              transition: isDragging.current ? 'none' : 'transform 0.1s ease-out',
+                              transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel}) ${forcedOrientation === 'landscape' ? 'rotate(90deg) scale(1.4)' : ''}`,
+                              transition: isDragging.current ? 'none' : 'transform 0.3s ease-out',
                               transformOrigin: 'center center'
                             }}
                             isProject360={project.is360}
@@ -706,29 +706,57 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             {zoomLevel <= 1 && !isBrowserFullscreen && (
               <button
                 onClick={handleNextClick}
-                className={`absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 md:bg-black/5 hover:bg-black/10 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[2px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
+                className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-50 p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
               >
-                <ChevronRightIcon className="w-10 h-10 md:w-8 md:h-8 text-white md:text-gray-800" />
+                <ChevronRightIcon className="w-7 h-7 md:w-8 md:h-8 text-white md:text-gray-800" />
               </button>
             )}
             
-            {/* Horizontal Zoom Bar */}
-            <div 
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10" 
-              onClick={(e) => e.stopPropagation()}
-            >
-               <span className="text-white text-xs font-medium">Zoom</span>
-               <input 
-                  type="range" 
-                  min="1" 
-                  max="3.25" 
-                  step="0.001" 
-                  value={zoomLevel} 
-                  onChange={handleZoomChange}
-                  onWheel={handleSliderWheel}
-                  className="w-32 md:w-48 h-1 bg-gray-500 rounded-lg appearance-none cursor-pointer accent-white hover:accent-gray-200"
-               />
-               <span className="text-white text-xs font-mono w-8 text-right">{Math.round(zoomLevel * 100)}%</span>
+            {/* Bottom Controls Container */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4 w-full px-4" onClick={(e) => e.stopPropagation()}>
+               
+               {/* Orientation Controls (Mobile Only) */}
+               {!is360Active && (
+                 <div className="flex items-center gap-2 lg:hidden bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+                    <button 
+                      onClick={() => setForcedOrientation('portrait')}
+                      className={`p-2 rounded-full transition-all ${forcedOrientation === 'portrait' ? 'bg-white text-black scale-110' : 'text-white/60 hover:text-white'}`}
+                      title="Portrait Mode"
+                    >
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="7" y="3" width="10" height="18" rx="2" />
+                        <circle cx="12" cy="18" r="0.5" fill="currentColor" />
+                      </svg>
+                    </button>
+                    <div className="w-[1px] h-4 bg-white/10 mx-1" />
+                    <button 
+                      onClick={() => setForcedOrientation('landscape')}
+                      className={`p-2 rounded-full transition-all ${forcedOrientation === 'landscape' ? 'bg-white text-black scale-110' : 'text-white/60 hover:text-white'}`}
+                      title="Landscape Mode (Rotate View)"
+                    >
+                      <svg className="w-5 h-5 rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="7" y="3" width="10" height="18" rx="2" />
+                        <circle cx="12" cy="18" r="0.5" fill="currentColor" />
+                      </svg>
+                    </button>
+                 </div>
+               )}
+
+               {/* Zoom Slider */}
+               <div className="flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10">
+                  <span className="text-white text-[10px] md:text-xs font-medium uppercase tracking-widest">Zoom</span>
+                  <input 
+                      type="range" 
+                      min="1" 
+                      max="3.25" 
+                      step="0.001" 
+                      value={zoomLevel} 
+                      onChange={handleZoomChange}
+                      onWheel={handleSliderWheel}
+                      className="w-24 md:w-48 h-1 bg-gray-500 rounded-lg appearance-none cursor-pointer accent-white hover:accent-gray-200"
+                  />
+                  <span className="text-white text-[10px] md:text-xs font-mono w-8 text-right">{Math.round(zoomLevel * 100)}%</span>
+               </div>
             </div>
           </div>
         </div>
