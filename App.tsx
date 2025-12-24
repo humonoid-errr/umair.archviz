@@ -8,6 +8,7 @@ import ServicesSection from './components/ServicesSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import GalleryPage from './components/GalleryPage';
 import CustomCursor from './components/CustomCursor';
+import IntroOverlay from './components/IntroOverlay';
 import { initialProjects } from './constants';
 import { Project, RandomImage } from './types';
 import { initialAboutContent } from './constants/initialContent';
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isZenMode, setIsZenMode] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
   
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
@@ -74,12 +76,12 @@ const App: React.FC = () => {
   }, [allHeroImages.length]);
 
   useEffect(() => {
-    if (currentPage !== 'home' || allHeroImages.length === 0 || isZenMode) {
+    if (currentPage !== 'home' || allHeroImages.length === 0 || isZenMode || showIntro) {
       return;
     }
     const imageInterval = setInterval(handleNextHeroImage, 5000);
     return () => clearInterval(imageInterval);
-  }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode]);
+  }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode, showIntro]);
 
   const handleSelectProject = useCallback((project: Project) => {
     setSelectedProject(project);
@@ -110,6 +112,7 @@ const App: React.FC = () => {
 
   return (
     <>
+      {showIntro && <IntroOverlay onComplete={() => setShowIntro(false)} />}
       <CustomCursor />
       {currentPage === 'home' ? (
         <div className="h-[100dvh] overflow-hidden bg-black text-white font-sans antialiased">
