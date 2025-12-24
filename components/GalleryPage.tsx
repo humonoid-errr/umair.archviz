@@ -655,8 +655,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           </div>
           
           <div className="relative w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            {/* Arrows: Prominent on mobile (smaller), reactive on desktop. Hidden in browser fullscreen. */}
-            {zoomLevel <= 1 && !isBrowserFullscreen && (
+            {/* Arrows: Prominent on mobile (smaller), reactive on desktop. Now persistent in browser fullscreen. */}
+            {zoomLevel <= 1 && (
               <button
                 onClick={handlePreviousClick}
                 className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-50 p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''}`}
@@ -721,7 +721,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
                 </div>
             </div>
 
-            {zoomLevel <= 1 && !isBrowserFullscreen && (
+            {zoomLevel <= 1 && (
               <button
                 onClick={handleNextClick}
                 className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-50 p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''}`}
