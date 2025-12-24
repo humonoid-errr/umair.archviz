@@ -6,37 +6,42 @@ interface IntroOverlayProps {
 }
 
 const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
+  const [isVisible, setIsVisible] = useState(true);
   const [showText, setShowText] = useState(false);
-  const [hideScreen, setHideScreen] = useState(false);
 
   useEffect(() => {
-    // Fade in text
-    const timer1 = setTimeout(() => setShowText(true), 500);
-    
-    // Fade out text
-    const timer2 = setTimeout(() => setShowText(false), 2500);
-    
-    // Fade out screen
-    const timer3 = setTimeout(() => setHideScreen(true), 3300);
-    
-    // Unmount from parent
-    const timer4 = setTimeout(onComplete, 4300);
+    // Sequence: Start invisible, show text, hide overlay
+    const t1 = setTimeout(() => setShowText(true), 400);   // Fade in text
+    const t2 = setTimeout(() => setIsVisible(false), 2400); // Fade out overlay
+    const t3 = setTimeout(() => onComplete(), 3400);       // Fully unmount
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [onComplete]);
 
   return (
-    <div className={`fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center transition-opacity duration-1000 ease-in-out ${hideScreen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-      <div className={`text-white text-center transition-all duration-1000 ease-in-out transform ${showText ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-4 blur-sm'}`}>
-         <h1 className="text-xl md:text-3xl font-light tracking-[0.2em] md:tracking-[0.4em] uppercase text-white">
-            New Zealand. <span className="text-gray-400">Experienced.</span>
-         </h1>
+    <div 
+      className={`fixed inset-0 z-[200] bg-black flex items-center justify-center transition-opacity duration-1000 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+    >
+      <div className="relative text-center px-6">
+        <p 
+          className={`text-white text-xl md:text-4xl font-light tracking-[0.4em] md:tracking-[0.6em] uppercase transition-all duration-1000 transform ${showText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        >
+          Serving Worldwide
+        </p>
+        
+        {/* Subtle decorative line below text */}
+        <div 
+          className={`mt-10 h-[1px] bg-white/20 mx-auto transition-all duration-1000 delay-300 ${showText ? 'w-24 md:w-48 opacity-100' : 'w-0 opacity-0'}`} 
+        />
       </div>
+      
+      {/* Decorative background grid lines for architectural feel */}
+      <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-white/5 -translate-x-1/2" />
+      <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-white/5 -translate-y-1/2" />
     </div>
   );
 };
