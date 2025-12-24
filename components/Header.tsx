@@ -21,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const workMenuRef = useRef<HTMLDivElement>(null);
   
-  // FIX: Every page except 'home' has a white background, so text must be dark
+  // Every page except 'home' has a white background, so text must be dark
   const isLightPage = page !== 'home';
 
   useEffect(() => {
@@ -53,7 +53,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
   };
 
   const getHeaderClasses = () => {
-    const baseClasses = "absolute top-0 left-0 right-0 z-40 group transition-all duration-1000 ease-in-out";
+    // Changed 'absolute' to 'fixed' to ensure it stays at the top during scroll
+    const baseClasses = "fixed top-0 left-0 right-0 z-[100] group transition-all duration-1000 ease-in-out";
     const visibilityClasses = isZenMode ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100";
     return `${baseClasses} ${visibilityClasses} py-8 md:py-12 px-8 md:px-24`;
   };
@@ -97,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
         <div className={`relative flex justify-between items-center transition-colors duration-500 ${getTextClasses()}`}>
           <button
             onClick={() => onNavigate('home')}
-            className="text-lg md:text-2xl font-light tracking-[0.3em] md:tracking-[0.5em] uppercase bg-transparent border-none p-0 text-left cursor-pointer hover:opacity-70 transition-opacity"
+            className={`text-lg md:text-2xl font-light tracking-[0.3em] md:tracking-[0.5em] uppercase bg-transparent border-none p-0 text-left cursor-pointer hover:opacity-70 transition-all duration-500 ${getTextClasses()}`}
           >
             MOHD UMAIR
           </button>
@@ -153,7 +154,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, page, projects, onSelectPro
       </header>
 
       {isMobileMenuOpen && (
-        <div className={`fixed inset-0 bg-white z-[60] text-gray-900 p-8 flex flex-col transform transition-transform duration-300 ease-in-out ${isMenuVisible ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`fixed inset-0 bg-white z-[200] text-gray-900 p-8 flex flex-col transform transition-transform duration-300 ease-in-out ${isMenuVisible ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex justify-end">
             <button onClick={closeMobileMenu} className="p-2 -m-2"><CloseIcon className="w-8 h-8 text-gray-900" /></button>
           </div>
