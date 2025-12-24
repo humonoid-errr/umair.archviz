@@ -618,21 +618,38 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
           onAnimationEnd={() => setIsOverlayAnimationDone(true)}
           onClick={closeFullscreen}
         >
-          {/* Top Controls */}
-          <div className="absolute top-6 right-6 flex items-center gap-4 z-[60]">
+          {/* Top Controls Bar - Compact and includes orientation toggle */}
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 md:gap-4 z-[60]">
+             {/* Orientation Toggle (Mobile Only) - Smaller and placed before fullscreen toggle */}
+             {!is360Active && (
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setForcedOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait');
+                  }}
+                  className={`lg:hidden text-gray-800 bg-white/60 backdrop-blur-sm p-1.5 rounded-full hover:bg-white/80 transition-all border border-black/5 active:scale-90`}
+                  title="Toggle Orientation"
+                >
+                   <svg className={`w-5 h-5 transition-transform duration-300 ${forcedOrientation === 'landscape' ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="7" y="3" width="10" height="18" rx="2" />
+                      <circle cx="12" cy="18" r="0.5" fill="currentColor" />
+                   </svg>
+                </button>
+             )}
+
              <button 
                 onClick={(e) => { e.stopPropagation(); toggleBrowserFullscreen(); }}
-                className="text-gray-800 bg-white/50 backdrop-blur-sm p-2 rounded-full hover:bg-white/80 transition-all hover:scale-110 active:scale-95 border border-black/5"
+                className="text-gray-800 bg-white/60 backdrop-blur-sm p-1.5 md:p-2 rounded-full hover:bg-white/80 transition-all hover:scale-110 active:scale-90 border border-black/5"
                 title="Toggle Display Fullscreen"
               >
-                {isBrowserFullscreen ? <MinimizeIcon className="w-6 h-6" /> : <FullscreenIcon className="w-6 h-6" />}
+                {isBrowserFullscreen ? <MinimizeIcon className="w-5 h-5 md:w-6 md:h-6" /> : <FullscreenIcon className="w-5 h-5 md:w-6 md:h-6" />}
               </button>
               <button 
-                onClick={closeFullscreen}
-                className="text-gray-800 bg-white/50 backdrop-blur-sm p-2 rounded-full hover:bg-white/80 transition-all hover:scale-110 active:scale-95 border border-black/5"
+                onClick={(e) => { e.stopPropagation(); closeFullscreen(); }}
+                className="text-gray-800 bg-white/60 backdrop-blur-sm p-1.5 md:p-2 rounded-full hover:bg-white/80 transition-all hover:scale-110 active:scale-90 border border-black/5"
                 aria-label="Close Gallery"
               >
-                <CloseIcon className="w-6 h-6" />
+                <CloseIcon className="w-5 h-5 md:w-6 md:h-6" />
               </button>
           </div>
           
@@ -714,34 +731,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project }) => {
             
             {/* Bottom Controls Container */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4 w-full px-4" onClick={(e) => e.stopPropagation()}>
-               
-               {/* Orientation Controls (Mobile Only) */}
-               {!is360Active && (
-                 <div className="flex items-center gap-2 lg:hidden bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
-                    <button 
-                      onClick={() => setForcedOrientation('portrait')}
-                      className={`p-2 rounded-full transition-all ${forcedOrientation === 'portrait' ? 'bg-white text-black scale-110' : 'text-white/60 hover:text-white'}`}
-                      title="Portrait Mode"
-                    >
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="7" y="3" width="10" height="18" rx="2" />
-                        <circle cx="12" cy="18" r="0.5" fill="currentColor" />
-                      </svg>
-                    </button>
-                    <div className="w-[1px] h-4 bg-white/10 mx-1" />
-                    <button 
-                      onClick={() => setForcedOrientation('landscape')}
-                      className={`p-2 rounded-full transition-all ${forcedOrientation === 'landscape' ? 'bg-white text-black scale-110' : 'text-white/60 hover:text-white'}`}
-                      title="Landscape Mode (Rotate View)"
-                    >
-                      <svg className="w-5 h-5 rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="7" y="3" width="10" height="18" rx="2" />
-                        <circle cx="12" cy="18" r="0.5" fill="currentColor" />
-                      </svg>
-                    </button>
-                 </div>
-               )}
-
                {/* Zoom Slider */}
                <div className="flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10">
                   <span className="text-white text-[10px] md:text-xs font-medium uppercase tracking-widest">Zoom</span>
