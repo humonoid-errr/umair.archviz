@@ -2,13 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { RandomImage } from '../types';
 import { isImageUrl360 } from '../utils/imageOptimizer';
+import { FullscreenIcon } from './icons/FullscreenIcon';
+import { MinimizeIcon } from './icons/MinimizeIcon';
 
 interface HeroProps {
   image: RandomImage | null;
   onSkip?: () => void;
+  isZenMode?: boolean;
+  onToggleZenMode?: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
+const Hero: React.FC<HeroProps> = ({ image, onSkip, isZenMode = false, onToggleZenMode }) => {
   const [img1, setImg1] = useState<RandomImage | null>(null);
   const [img2, setImg2] = useState<RandomImage | null>(null);
   const [activeSlot, setActiveSlot] = useState<1 | 2>(1);
@@ -17,11 +21,8 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
   useEffect(() => {
     if (!image) return;
 
-    // Determine current visible URL to avoid reloading the same image
     const currentUrl = activeSlot === 1 ? img1?.imageUrl : img2?.imageUrl;
-    if (image.imageUrl === currentUrl) {
-      return;
-    }
+    if (image.imageUrl === currentUrl) return;
 
     let isCancelled = false;
     const preloader = new Image();
@@ -35,16 +36,13 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
       const isMobile = window.innerWidth < 768; 
       const is360 = isImageUrl360(url);
 
-      // Skip 360 images globally as they distort in 2D cover mode
+      // CRITICAL: Skip any detected 360 image from landing page transitions
       if (is360) {
         if (onSkip) onSkip();
         return;
       }
 
-      /**
-       * Desktop Exclusion Logic
-       * Skip Portrait images on desktop to prevent awkward crops
-       */
+      // Desktop Exclusion Logic
       if (!isMobile) {
         const desktopBlacklist = [
           'apartment%20sanskar', 'apartment sanskar',
@@ -61,21 +59,18 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
         ];
 
         const isBlacklisted = desktopBlacklist.some(pattern => url.includes(pattern));
-
         if (isPortrait || isBlacklisted) {
           if (onSkip) onSkip();
           return;
         }
       }
 
-      // If this is the very first load
       if (!img1 && !img2) {
         setImg1(image);
         setActiveSlot(1);
         return;
       }
       
-      // Load into the non-active slot
       setIsTransitioning(true);
       if (activeSlot === 1) {
         setImg2(image);
@@ -88,21 +83,15 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
 
     preloader.onerror = () => {
       if (isCancelled) return;
-      console.error(`Failed to load hero image: ${image.imageUrl}`);
       if (onSkip) onSkip();
     };
     
-    return () => {
-      isCancelled = true;
-    };
+    return () => { isCancelled = true; };
   }, [image, img1, img2, activeSlot, onSkip]);
 
-  // Cleanup effect: Reset the background image opacity after transition to keep DOM clean
   useEffect(() => {
     if (isTransitioning) {
-      const timer = setTimeout(() => {
-        setIsTransitioning(false);
-      }, 2500); // Match this with the CSS transition duration
+      const timer = setTimeout(() => setIsTransitioning(false), 2500);
       return () => clearTimeout(timer);
     }
   }, [isTransitioning]);
@@ -110,21 +99,16 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
   const getSlotClasses = (slotNumber: 1 | 2) => {
     const isActive = activeSlot === slotNumber;
     const zIndex = isActive ? 'z-20' : 'z-10';
-    
-    // Smooth Blurred Transition Logic
     let stateClasses = '';
     let transitionClasses = '';
 
     if (isActive) {
-        // Active: Fully visible, clear (no blur)
         stateClasses = 'opacity-100 blur-0';
         transitionClasses = 'transition-all duration-[2500ms] ease-in-out';
     } else if (isTransitioning) {
-        // Outgoing (Background): Fully visible, clear (no blur)
         stateClasses = 'opacity-100 blur-0';
         transitionClasses = 'transition-none';
     } else {
-        // Idle (Hidden): Invisible, Blurred
         stateClasses = 'opacity-0 blur-xl';
         transitionClasses = 'transition-none';
     }
@@ -135,11 +119,11 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
   const activeProjectName = (activeSlot === 1 ? img1 : img2)?.projectName;
 
   if (!img1 && !img2) {
-    return <main className="relative h-[100dvh] w-full overflow-hidden bg-black" />;
+    return <main className="relative h-[100dvh] w-full bg-black" />;
   }
   
   return (
-    <main className="relative h-[100dvh] w-full overflow-hidden bg-black group">
+    <main className="relative h-[100dvh] w-full overflow-hidden bg-black group/hero">
       {img1 && (
         <div className={getSlotClasses(1)}>
           <div 
@@ -157,14 +141,33 @@ const Hero: React.FC<HeroProps> = ({ image, onSkip }) => {
         </div>
       )}
       
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30 pointer-events-none z-30" />
+      {/* Overlay: Fades in Zen Mode */}
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30 pointer-events-none z-30 transition-opacity duration-1000 ${isZenMode ? 'opacity-0' : 'opacity-100'}`} />
       
-      <div className="absolute bottom-8 inset-x-0 z-30 text-center px-4">
+      {/* Zen Toggle: Pullable tab */}
+      {onToggleZenMode && (
+         <div className="absolute right-0 top-1/2 -translate-y-1/2 z-[60] hidden md:flex">
+             <button
+                onClick={onToggleZenMode}
+                className="group/zen relative flex items-center justify-start bg-black/40 backdrop-blur-md border border-white/20 border-r-0 rounded-l-full py-4 pl-4 pr-3 hover:bg-black/80 hover:pl-6 transition-all duration-300 translate-x-[calc(100%-3.5rem)] hover:translate-x-0 cursor-pointer shadow-2xl"
+                aria-label={isZenMode ? "Exit Zen Mode" : "Enter Zen Mode"}
+             >
+                <div className="flex flex-row items-center gap-3">
+                   <div className={!isZenMode ? "animate-pulse" : ""}>
+                      {isZenMode ? <MinimizeIcon className="w-5 h-5 text-white" /> : <FullscreenIcon className="w-5 h-5 text-white" />}
+                   </div>
+                   <span className="text-[10px] uppercase font-light tracking-[0.2em] text-white whitespace-nowrap opacity-0 group-hover/zen:opacity-100 transition-opacity duration-300">
+                      {isZenMode ? "Exit" : "Zen Mode"}
+                   </span>
+                </div>
+             </button>
+         </div>
+      )}
+
+      {/* Project Title: Fades in Zen Mode */}
+      <div className={`absolute bottom-8 inset-x-0 z-30 text-center px-4 transition-all duration-1000 ${isZenMode ? 'translate-y-20 opacity-0' : 'translate-y-0 opacity-100'}`}>
         <div className="inline-block px-6 py-2 bg-black/50 backdrop-blur-sm rounded-full border border-white/10 shadow-lg">
-          <h2 
-            key={activeProjectName}
-            className="text-xs sm:text-sm font-light tracking-[0.1em] sm:tracking-[0.2em] text-white uppercase text-center whitespace-nowrap animate-contentFadeIn"
-          >
+          <h2 key={activeProjectName} className="text-xs sm:text-sm font-light tracking-[0.1em] sm:tracking-[0.2em] text-white uppercase text-center animate-contentFadeIn">
             {activeProjectName}
           </h2>
         </div>
