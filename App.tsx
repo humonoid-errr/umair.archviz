@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isZenMode, setIsZenMode] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [isGalleryFullscreen, setIsGalleryFullscreen] = useState(false);
   
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
@@ -97,11 +98,13 @@ const App: React.FC = () => {
     setSelectedProject(project);
     setCurrentPage('gallery');
     setIsZenMode(false);
+    setIsGalleryFullscreen(false);
   }, []);
 
   const handleNavigate = useCallback((page: Page) => {
     setCurrentPage(page);
     setIsZenMode(false);
+    setIsGalleryFullscreen(false);
     if (page !== 'gallery') {
       setSelectedProject(null);
     }
@@ -115,7 +118,12 @@ const App: React.FC = () => {
       case 'services': return <ServicesSection />;
       case 'testimonials': return <TestimonialsSection />;
       case 'contact': return <ContactSection />;
-      case 'gallery': return selectedProject && <GalleryPage project={selectedProject} />;
+      case 'gallery': return selectedProject && (
+        <GalleryPage 
+          project={selectedProject} 
+          onFullscreenChange={setIsGalleryFullscreen} 
+        />
+      );
       default: return null;
     }
   };
@@ -132,6 +140,7 @@ const App: React.FC = () => {
             projects={projects} 
             onSelectProject={handleSelectProject}
             isZenMode={isZenMode}
+            forceHide={isGalleryFullscreen}
           />
           <Hero 
             image={currentHeroImage} 
@@ -142,7 +151,13 @@ const App: React.FC = () => {
         </div>
       ) : (
         <div className="font-sans antialiased bg-white min-h-screen flex flex-col">
-          <Header onNavigate={handleNavigate} page={currentPage} projects={projects} onSelectProject={handleSelectProject} />
+          <Header 
+            onNavigate={handleNavigate} 
+            page={currentPage} 
+            projects={projects} 
+            onSelectProject={handleSelectProject} 
+            forceHide={isGalleryFullscreen}
+          />
           <main key={currentPage} className="animate-contentFadeIn flex-grow">
             {renderContent()}
           </main>
