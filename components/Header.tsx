@@ -28,16 +28,50 @@ const Header: React.FC<HeaderProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(true);
+  const [isHeaderHiddenByScroll, setIsHeaderHiddenByScroll] = useState(false);
+  const lastScrollY = useRef(0);
   const workMenuRef = useRef<HTMLDivElement>(null);
   
   const isLightPage = page !== 'home';
 
+  // Handle responsiveness
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Handle smart scroll behavior (Hide on scroll down, show on scroll up)
+  useEffect(() => {
+    if (page === 'home') {
+      setIsHeaderHiddenByScroll(false);
+      return;
+    }
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Always show at the very top
+      if (currentScrollY < 50) {
+        setIsHeaderHiddenByScroll(false);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      // Hide if scrolling down, show if scrolling up
+      if (currentScrollY > lastScrollY.current) {
+        setIsHeaderHiddenByScroll(true);
+      } else {
+        setIsHeaderHiddenByScroll(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [page]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -68,10 +102,10 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const getHeaderClasses = () => {
-    const baseClasses = "fixed top-0 left-0 right-0 z-[100] group transition-all duration-1000 ease-in-out";
+    const baseClasses = "fixed top-0 left-0 right-0 z-[100] group transition-all duration-500 ease-in-out";
     
-    // Hide header if forceHide is true (Fullscreen Gallery) or if Zen Mode is on (Desktop only)
-    const shouldHide = forceHide || (isZenMode && isDesktop);
+    // Combined visibility logic
+    const shouldHide = forceHide || isHeaderHiddenByScroll || (isZenMode && isDesktop);
     const visibilityClasses = shouldHide ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100";
     
     return `${baseClasses} ${visibilityClasses} py-8 md:py-12 px-8 md:px-24`;
