@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Project } from '../types';
 import { FullscreenIcon } from './icons/FullscreenIcon';
 import { MinimizeIcon } from './icons/MinimizeIcon';
@@ -30,57 +30,47 @@ const ProgressiveImage: React.FC<{
   onContextMenu?: (e: React.MouseEvent) => void;
   onLoad?: () => void;
   isProject360?: boolean;
-}> = ({ src, alt, className, style, loading, draggable, onContextMenu, onLoad, isProject360 }) => {
-  const [currentSrc, setCurrentSrc] = useState<string>('');
+}> = ({ src, alt, className, style, loading = "lazy", draggable, onContextMenu, onLoad, isProject360 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   
   const is360 = isProject360 || isImageUrl360(src);
-  
-  useEffect(() => {
-    setCurrentSrc('');
-    setIsLoaded(false);
 
-    const thumbSrc = getOptimizedImage(src, 30, 5, false, is360);
-    setCurrentSrc(thumbSrc);
+  // Memoize URLs to prevent recalculation on render and ensure stable references
+  const tinySrc = useMemo(() => 
+    getOptimizedImage(src, 20, 10, false, is360), 
+  [src, is360]);
 
-    const isMobile = window.innerWidth < 768;
-    const optimizedWidth = isMobile ? 1280 : 2048; 
-    const optimizedSrc = getOptimizedImage(src, optimizedWidth, 85, true, is360);
-    
-    const img = new Image();
-    img.src = optimizedSrc;
-    img.onload = () => {
-      setCurrentSrc(optimizedSrc);
-      setIsLoaded(true);
-      if (onLoad) onLoad();
-      
-      if (is360 && !isMobile) {
-        const rawImg = new Image();
-        rawImg.src = getRawAssetUrl(src);
-        rawImg.onload = () => {
-          if (is360) setCurrentSrc(rawImg.src);
-        };
-      }
-    };
-  }, [src, is360, onLoad]);
+  const fullSrc = useMemo(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    // slightly reduced width for gallery grid to speed up loading, keeps 4k for 360
+    const optimizedWidth = is360 ? 4096 : (isMobile ? 800 : 1600); 
+    return getOptimizedImage(src, optimizedWidth, 85, true, is360);
+  }, [src, is360]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden flex items-center justify-center" style={style}>
-       {!is360 && (
-         <img
-            src={getOptimizedImage(src, 30, 5, false)}
-            alt=""
-            className={`absolute inset-0 w-full h-full object-cover filter blur-3xl scale-110 transition-opacity duration-700 ease-in-out ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
-            draggable={false}
-          />
-       )}
+    <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-gray-100" style={style}>
+       {/* Tiny Blur Placeholder - Always present initially */}
+       <img
+          src={tinySrc}
+          alt=""
+          className={`absolute inset-0 w-full h-full object-cover filter blur-xl scale-110 transition-opacity duration-700 ease-out z-0`}
+          draggable={false}
+          aria-hidden="true"
+        />
+
+      {/* Main High-Res Image - Loads on top */}
       <img
-        src={currentSrc}
+        src={fullSrc}
         alt={alt}
-        className={`${className} transition-opacity duration-500 ease-in-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`${className} relative z-10 transition-opacity duration-500 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         loading={loading}
+        decoding="async"
         draggable={draggable}
         onContextMenu={onContextMenu}
+        onLoad={() => {
+          setIsLoaded(true);
+          if (onLoad) onLoad();
+        }}
       />
     </div>
   );
@@ -111,6 +101,21 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
   const [isOverlayAnimationDone, setIsOverlayAnimationDone] = useState(false);
 
   const galleryImages = project.galleryImages;
+
+  // Preload images logic
+  useEffect(() => {
+    // Preload the first 4 images immediately to ensure they are ready when user starts scrolling
+    const imagesToPreload = galleryImages.slice(0, 4);
+    
+    imagesToPreload.forEach(src => {
+      const is360 = project.is360 || isImageUrl360(src);
+      const isMobile = window.innerWidth < 768;
+      const optimizedWidth = is360 ? 4096 : (isMobile ? 800 : 1600);
+      
+      const img = new Image();
+      img.src = getOptimizedImage(src, optimizedWidth, 85, true, is360);
+    });
+  }, [galleryImages, project.is360]);
 
   const isCurrentIndex360 = useCallback((index: number | null) => {
     if (index === null) return false;
@@ -539,7 +544,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                       <ProgressiveImage
                         src={image}
                         alt={`${project.name} gallery image ${index + 1}`}
-                        loading={index < 2 ? "eager" : "lazy"}
+                        loading={index < 3 ? "eager" : "lazy"}
                         draggable={false}
                         onContextMenu={(e) => e.preventDefault()}
                         onLoad={checkScrollability}
