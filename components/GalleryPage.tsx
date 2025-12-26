@@ -607,10 +607,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
           onAnimationEnd={() => setIsOverlayAnimationDone(true)}
           onClick={closeFullscreen}
         >
-          <div className={`absolute z-[160] flex items-center gap-2 transition-all duration-500 ${
+          <div className={`absolute z-[160] transition-all duration-500 ${
             forcedOrientation === 'landscape' 
-              ? 'top-1/2 -right-[5.5rem] -translate-y-1/2 rotate-90 origin-center' 
-              : 'top-4 right-4 md:top-6 md:right-6'
+              ? 'left-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 items-center origin-center' 
+              : 'top-4 right-4 md:top-6 md:right-6 flex items-center gap-2'
           }`}>
              {!is360Active && (
                 <button 
@@ -618,30 +618,32 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                     e.stopPropagation(); 
                     setForcedOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait');
                   }}
-                  className={`lg:hidden flex items-center gap-2 text-gray-800 bg-white/60 backdrop-blur-sm py-1.5 px-3 rounded-full hover:bg-white/80 transition-all border border-black/5 active:scale-90`}
+                  className={`text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all border border-black/5 active:scale-90 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : 'flex items-center gap-2 px-3'}`}
                   title="Toggle Orientation"
                 >
-                   <svg className={`w-4 h-4 transition-transform duration-300 ${forcedOrientation === 'landscape' ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="7" y="3" width="10" height="18" rx="2" />
                       <circle cx="12" cy="18" r="0.5" fill="currentColor" />
                    </svg>
-                   <span className="text-[9px] uppercase font-bold tracking-widest">Rotate</span>
+                   {forcedOrientation !== 'landscape' && (
+                       <span className="text-[10px] uppercase font-bold tracking-widest lg:hidden">Rotate</span>
+                   )}
                 </button>
              )}
 
              <button 
                 onClick={(e) => { e.stopPropagation(); toggleBrowserFullscreen(); }}
-                className="text-gray-800 bg-white/60 backdrop-blur-sm p-1.5 rounded-full hover:bg-white/80 transition-all hover:scale-110 active:scale-90 border border-black/5"
+                className={`text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all hover:scale-110 active:scale-90 border border-black/5 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : ''}`}
                 title="Toggle Display Fullscreen"
               >
-                {isBrowserFullscreen ? <MinimizeIcon className="w-4 h-4 md:w-5 md:h-5" /> : <FullscreenIcon className="w-4 h-4 md:w-5 md:h-5" />}
+                {isBrowserFullscreen ? <MinimizeIcon className="w-5 h-5" /> : <FullscreenIcon className="w-5 h-5" />}
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); closeFullscreen(); }}
-                className="text-gray-800 bg-white/60 backdrop-blur-sm p-1.5 rounded-full hover:bg-white/80 transition-all hover:scale-110 active:scale-90 border border-black/5"
+                className={`text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all hover:scale-110 active:scale-90 border border-black/5 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : ''}`}
                 aria-label="Close Gallery"
               >
-                <CloseIcon className="w-4 h-4 md:w-5 md:h-5" />
+                <CloseIcon className="w-5 h-5" />
               </button>
           </div>
           
@@ -661,8 +663,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
 
             {/* Sliding Track for Fullscreen Images */}
             <div
-              className="w-full h-full flex items-center transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) will-change-transform"
-              style={{ transform: `translateX(-${fullscreenIndex * 100}%)` }}
+              className={`w-full h-full flex items-center transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) will-change-transform ${
+                forcedOrientation === 'landscape' ? 'flex-col' : 'flex-row'
+              }`}
+              style={{ 
+                transform: forcedOrientation === 'landscape' 
+                  ? `translateY(-${fullscreenIndex * 100}%)` 
+                  : `translateX(-${fullscreenIndex * 100}%)` 
+              }}
             >
               {galleryImages.map((image, index) => {
                 const isActive = index === fullscreenIndex;
@@ -743,15 +751,19 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
             )}
             
             <div 
-              className={`absolute z-[160] flex flex-col items-center gap-4 px-4 transition-all duration-500 ${
+              className={`absolute z-[160] flex items-center justify-center transition-all duration-500 ${
                   forcedOrientation === 'landscape'
-                    ? 'left-[-4rem] top-1/2 -translate-y-1/2 rotate-90 w-80'
-                    : 'bottom-6 left-1/2 -translate-x-1/2 w-full'
+                    ? 'right-[-5rem] top-1/2 -translate-y-1/2 rotate-90 origin-center' 
+                    : 'bottom-8 left-1/2 -translate-x-1/2'
                 }`} 
               onClick={(e) => e.stopPropagation()}
             >
-               <div className="flex items-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/10 w-auto justify-center">
-                  <span className="text-white text-[10px] md:text-xs font-medium uppercase tracking-widest">Zoom</span>
+               <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xl">
+                  {/* Minimal Minus */}
+                  <button onClick={() => setZoomLevel(Math.max(1, zoomLevel - 0.5))} className="text-white/70 hover:text-white p-1">
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                  
                   <input 
                       type="range" 
                       min="1" 
@@ -760,9 +772,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                       value={zoomLevel} 
                       onChange={handleZoomChange}
                       onWheel={handleSliderWheel}
-                      className="w-24 md:w-48 h-1 bg-gray-500 rounded-lg appearance-none cursor-pointer accent-white hover:accent-gray-200"
+                      className="w-32 md:w-48 h-0.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-white hover:accent-gray-200"
                   />
-                  <span className="text-white text-[10px] md:text-xs font-mono w-8 text-right">{Math.round(zoomLevel * 100)}%</span>
+                  
+                  {/* Minimal Plus */}
+                  <button onClick={() => setZoomLevel(Math.min(3.25, zoomLevel + 0.5))} className="text-white/70 hover:text-white p-1">
+                       <svg className="w-3 h-3" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
                </div>
             </div>
           </div>
