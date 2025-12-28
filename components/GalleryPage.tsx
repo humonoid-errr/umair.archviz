@@ -612,8 +612,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
               ? 'left-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 items-center origin-center' 
               : 'top-4 right-4 md:top-6 md:right-6 flex items-center gap-2'
           }`}>
-             {!is360Active && (
-                <button 
+             {/* Always show the rotate button on mobile (lg:hidden handles desktop hiding) */}
+             <button 
                   onClick={(e) => { 
                     e.stopPropagation(); 
                     setForcedOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait');
@@ -628,8 +628,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                    {forcedOrientation !== 'landscape' && (
                        <span className="text-[10px] uppercase font-bold tracking-widest lg:hidden">Rotate</span>
                    )}
-                </button>
-             )}
+             </button>
 
              <button 
                 onClick={(e) => { e.stopPropagation(); toggleBrowserFullscreen(); }}
@@ -711,6 +710,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                         <div 
                           ref={pannellumContainerRef} 
                           className={`w-full h-full bg-black transition-opacity duration-700 ${is360Loading ? 'opacity-0' : 'opacity-100'}`} 
+                          style={forcedOrientation === 'landscape' ? { transform: 'rotate(90deg) scale(1.4)' } : {}}
                           onContextMenu={(e) => e.preventDefault()}
                         />
                       ) : (
