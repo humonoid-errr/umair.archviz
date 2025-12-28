@@ -420,89 +420,145 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
     }
   }, [forcedOrientation, is360Active]);
 
-  // Touch correction for forced landscape mode
+  // Touch correction for forced landscape mode with Momentum
   useEffect(() => {
     const overlay = touchOverlayRef.current;
-    // Only apply correction when in 360 mode AND forced landscape
     if (!overlay || !is360Active || forcedOrientation !== 'landscape') return;
 
-    let startX = 0;
-    let startY = 0;
-    let startYaw = 0;
-    let startPitch = 0;
-    let startHfov = 0;
-    let startDist = 0;
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
     
-    // Sensitivity factor
-    const SPEED = 0.3;
+    // Momentum
+    let velX = 0;
+    let velY = 0;
+    let momentumID: number;
+    let lastMoveTime = 0;
+
+    // Pinch
+    let startDist = 0;
+    let startHfov = 0;
+    
+    // Tuning
+    const SENSITIVITY = 0.25; 
+    const FRICTION = 0.92;
+    const STOP_THRESHOLD = 0.05;
+
+    const stopMomentum = () => {
+        cancelAnimationFrame(momentumID);
+        velX = 0;
+        velY = 0;
+    };
+
+    const applyMomentum = () => {
+        if (!pannellumViewerRef.current) return;
+        
+        if (Math.abs(velX) > STOP_THRESHOLD || Math.abs(velY) > STOP_THRESHOLD) {
+            const viewer = pannellumViewerRef.current;
+            
+            // Apply velocity to look angles
+            // Drag Down (Y+) -> Look Left (Yaw -)
+            const currentYaw = viewer.getYaw();
+            viewer.setYaw(currentYaw - velY * SENSITIVITY);
+
+            // Drag Right (X+) -> Look Down (Pitch -)
+            const currentPitch = viewer.getPitch();
+            viewer.setPitch(currentPitch - velX * SENSITIVITY);
+
+            // Decay
+            velX *= FRICTION;
+            velY *= FRICTION;
+
+            momentumID = requestAnimationFrame(applyMomentum);
+        }
+    };
 
     const handleTouchStart = (e: TouchEvent) => {
-        e.preventDefault(); // Prevent default browser scrolling/zooming
-        const viewer = pannellumViewerRef.current;
-        if (!viewer) return;
-
+        e.preventDefault();
+        stopMomentum();
+        
         if (e.touches.length === 1) {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            startYaw = viewer.getYaw();
-            startPitch = viewer.getPitch();
+            isDragging = true;
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
+            lastMoveTime = Date.now();
+            velX = 0;
+            velY = 0;
         } else if (e.touches.length === 2) {
+            isDragging = false; // pinch is not drag
             const t1 = e.touches[0];
             const t2 = e.touches[1];
             startDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-            startHfov = viewer.getHfov();
+            if (pannellumViewerRef.current) {
+                startHfov = pannellumViewerRef.current.getHfov();
+            }
         }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
         e.preventDefault();
-        const viewer = pannellumViewerRef.current;
-        if (!viewer) return;
+        if (!pannellumViewerRef.current) return;
 
-        if (e.touches.length === 1) {
+        if (e.touches.length === 1 && isDragging) {
             const clientX = e.touches[0].clientX;
             const clientY = e.touches[0].clientY;
             
-            const deltaX = clientX - startX;
-            const deltaY = clientY - startY;
-
-            // In portrait holding (forced landscape):
-            // Vertical Swipe (Y axis) -> Should control Pitch (Up/Down)
-            // Horizontal Swipe (X axis) -> Should control Yaw (Left/Right)
+            // Calculate delta
+            const deltaX = clientX - lastX;
+            const deltaY = clientY - lastY;
             
-            // Map DeltaY to Pitch
-            // Drag Down (Y+) -> Image moves Down -> Look Up -> Pitch Increases
-            viewer.setPitch(startPitch + deltaY * SPEED);
-
-            // Map DeltaX to Yaw
-            // Drag Right (X+) -> Image moves Right -> Look Left -> Yaw Decreases
-            viewer.setYaw(startYaw - deltaX * SPEED);
+            // Update last pos
+            lastX = clientX;
+            lastY = clientY;
             
+            // Velocity for momentum (pixels per move event)
+            velX = deltaX;
+            velY = deltaY;
+
+            const viewer = pannellumViewerRef.current;
+            
+            // Direct Manipulation
+            // Y Axis controls Yaw
+            viewer.setYaw(viewer.getYaw() - deltaY * SENSITIVITY);
+            
+            // X Axis controls Pitch
+            viewer.setPitch(viewer.getPitch() - deltaX * SENSITIVITY);
+            
+            lastMoveTime = Date.now();
+
         } else if (e.touches.length === 2) {
-            const t1 = e.touches[0];
-            const t2 = e.touches[1];
-            const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-            
-            if (startDist > 0) {
-                 // Ratio change
-                 const scale = startDist / dist; 
-                 // If dist > startDist (pinch out), scale < 1 -> zoom in (reduce hfov)
-                 viewer.setHfov(startHfov * scale);
-            }
+             const t1 = e.touches[0];
+             const t2 = e.touches[1];
+             const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+             
+             if (startDist > 0 && pannellumViewerRef.current) {
+                  const scale = startDist / dist;
+                  pannellumViewerRef.current.setHfov(startHfov * scale);
+             }
         }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
          e.preventDefault();
-         // No specific momentum handling needed for now
+         if (e.touches.length === 0 && isDragging) {
+             isDragging = false;
+             // Only apply momentum if the finger was moving recently
+             if (Date.now() - lastMoveTime < 100) {
+                 applyMomentum();
+             } else {
+                 velX = 0;
+                 velY = 0;
+             }
+         }
     };
 
-    // Use non-passive listeners to allow preventDefault
+    // Use non-passive listeners
     overlay.addEventListener('touchstart', handleTouchStart, { passive: false });
     overlay.addEventListener('touchmove', handleTouchMove, { passive: false });
     overlay.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     return () => {
+        stopMomentum();
         overlay.removeEventListener('touchstart', handleTouchStart);
         overlay.removeEventListener('touchmove', handleTouchMove);
         overlay.removeEventListener('touchend', handleTouchEnd);
