@@ -426,52 +426,75 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
     // Only apply correction when in 360 mode AND forced landscape
     if (!overlay || !is360Active || forcedOrientation !== 'landscape') return;
 
-    const dispatchMouseEvent = (type: string, touch: Touch) => {
-        // Find the element Pannellum listens to. Usually it's the container or a child.
-        // We dispatch to the container ref, it bubbles up/down.
-        // Pannellum often attaches listeners to document or window for drag, but starts on mousedown on container.
-        const target = pannellumContainerRef.current?.querySelector('.pnlm-render-container') || pannellumContainerRef.current;
-        if (!target) return;
-
-        // SWAP X AND Y COORDINATES
-        // When user swipes Vertically (Touch Y), we send Horizontal (Mouse X) to Pannellum.
-        // When user swipes Horizontally (Touch X), we send Vertical (Mouse Y) to Pannellum.
-        // This corrects the axis mismatch caused by the visual 90deg rotation.
-        
-        const evt = new MouseEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            clientX: touch.clientY, // Swap
-            clientY: touch.clientX, // Swap
-            screenX: touch.screenY, // Swap
-            screenY: touch.screenX, // Swap
-            buttons: 1 // Indicate left button pressed
-        });
-        
-        target.dispatchEvent(evt);
-    };
+    let startX = 0;
+    let startY = 0;
+    let startYaw = 0;
+    let startPitch = 0;
+    let startHfov = 0;
+    let startDist = 0;
+    
+    // Sensitivity factor
+    const SPEED = 0.3;
 
     const handleTouchStart = (e: TouchEvent) => {
-        if (e.touches.length > 1) return; // Allow pinch zoom to pass through natively if Pannellum handles it, or block if buggy
-        e.preventDefault(); // Stop native scrolling and default touch behavior
-        if (e.touches.length > 0) {
-            dispatchMouseEvent('mousedown', e.touches[0]);
+        e.preventDefault(); // Prevent default browser scrolling/zooming
+        const viewer = pannellumViewerRef.current;
+        if (!viewer) return;
+
+        if (e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            startYaw = viewer.getYaw();
+            startPitch = viewer.getPitch();
+        } else if (e.touches.length === 2) {
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            startDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            startHfov = viewer.getHfov();
         }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
         e.preventDefault();
-        if (e.touches.length > 0) {
-            dispatchMouseEvent('mousemove', e.touches[0]);
+        const viewer = pannellumViewerRef.current;
+        if (!viewer) return;
+
+        if (e.touches.length === 1) {
+            const clientX = e.touches[0].clientX;
+            const clientY = e.touches[0].clientY;
+            
+            const deltaX = clientX - startX;
+            const deltaY = clientY - startY;
+
+            // In portrait holding (forced landscape):
+            // Vertical Swipe (Y axis) -> Should control Pitch (Up/Down)
+            // Horizontal Swipe (X axis) -> Should control Yaw (Left/Right)
+            
+            // Map DeltaY to Pitch
+            // Drag Down (Y+) -> Image moves Down -> Look Up -> Pitch Increases
+            viewer.setPitch(startPitch + deltaY * SPEED);
+
+            // Map DeltaX to Yaw
+            // Drag Right (X+) -> Image moves Right -> Look Left -> Yaw Decreases
+            viewer.setYaw(startYaw - deltaX * SPEED);
+            
+        } else if (e.touches.length === 2) {
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            
+            if (startDist > 0) {
+                 // Ratio change
+                 const scale = startDist / dist; 
+                 // If dist > startDist (pinch out), scale < 1 -> zoom in (reduce hfov)
+                 viewer.setHfov(startHfov * scale);
+            }
         }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-        e.preventDefault();
-        if (e.changedTouches.length > 0) {
-            dispatchMouseEvent('mouseup', e.changedTouches[0]);
-        }
+         e.preventDefault();
+         // No specific momentum handling needed for now
     };
 
     // Use non-passive listeners to allow preventDefault
@@ -809,6 +832,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                                     width: '100vh',
                                     height: '100vw',
                                     transform: 'translate(-50%, -50%) rotate(90deg)',
+                                    touchAction: 'none'
                                 }}
                              />
                         )}
