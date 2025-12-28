@@ -618,7 +618,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                     e.stopPropagation(); 
                     setForcedOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait');
                   }}
-                  className={`text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all border border-black/5 active:scale-90 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : 'flex items-center gap-2 px-3'}`}
+                  className={`lg:hidden text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all border border-black/5 active:scale-90 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : 'flex items-center gap-2 px-3'}`}
                   title="Toggle Orientation"
                 >
                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
