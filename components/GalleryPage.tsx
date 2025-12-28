@@ -410,6 +410,15 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
     };
   }, [fullscreenIndex, isOverlayAnimationDone, galleryImages, isCurrentIndex360]);
 
+  // Force resize pannellum when rotation mode changes
+  useEffect(() => {
+    if (is360Active && pannellumViewerRef.current) {
+        setTimeout(() => {
+           pannellumViewerRef.current.resize();
+        }, 300);
+    }
+  }, [forcedOrientation, is360Active]);
+
   const handlePointerDown = (e: React.PointerEvent) => {
     if (is360Active) return;
     if (zoomLevel > 1) {
@@ -710,7 +719,15 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                         <div 
                           ref={pannellumContainerRef} 
                           className={`w-full h-full bg-black transition-opacity duration-700 ${is360Loading ? 'opacity-0' : 'opacity-100'}`} 
-                          style={forcedOrientation === 'landscape' ? { transform: 'rotate(90deg) scale(1.4)' } : {}}
+                          style={forcedOrientation === 'landscape' ? { 
+                            position: 'fixed',
+                            top: '50%',
+                            left: '50%',
+                            width: '100vh',
+                            height: '100vw',
+                            transform: 'translate(-50%, -50%) rotate(90deg)',
+                            zIndex: 100
+                          } : {}}
                           onContextMenu={(e) => e.preventDefault()}
                         />
                       ) : (
