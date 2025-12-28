@@ -96,6 +96,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
 
   const pannellumViewerRef = useRef<any>(null);
   const pannellumContainerRef = useRef<HTMLDivElement>(null);
+  const touchOverlayRef = useRef<HTMLDivElement>(null);
   const [is360Active, setIs360Active] = useState(false);
   const [is360Loading, setIs360Loading] = useState(false);
   const [isOverlayAnimationDone, setIsOverlayAnimationDone] = useState(false);
@@ -419,6 +420,72 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
     }
   }, [forcedOrientation, is360Active]);
 
+  // Touch correction for forced landscape mode
+  useEffect(() => {
+    const overlay = touchOverlayRef.current;
+    // Only apply correction when in 360 mode AND forced landscape
+    if (!overlay || !is360Active || forcedOrientation !== 'landscape') return;
+
+    const dispatchMouseEvent = (type: string, touch: Touch) => {
+        // Find the element Pannellum listens to. Usually it's the container or a child.
+        // We dispatch to the container ref, it bubbles up/down.
+        // Pannellum often attaches listeners to document or window for drag, but starts on mousedown on container.
+        const target = pannellumContainerRef.current?.querySelector('.pnlm-render-container') || pannellumContainerRef.current;
+        if (!target) return;
+
+        // SWAP X AND Y COORDINATES
+        // When user swipes Vertically (Touch Y), we send Horizontal (Mouse X) to Pannellum.
+        // When user swipes Horizontally (Touch X), we send Vertical (Mouse Y) to Pannellum.
+        // This corrects the axis mismatch caused by the visual 90deg rotation.
+        
+        const evt = new MouseEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            clientX: touch.clientY, // Swap
+            clientY: touch.clientX, // Swap
+            screenX: touch.screenY, // Swap
+            screenY: touch.screenX, // Swap
+            buttons: 1 // Indicate left button pressed
+        });
+        
+        target.dispatchEvent(evt);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+        if (e.touches.length > 1) return; // Allow pinch zoom to pass through natively if Pannellum handles it, or block if buggy
+        e.preventDefault(); // Stop native scrolling and default touch behavior
+        if (e.touches.length > 0) {
+            dispatchMouseEvent('mousedown', e.touches[0]);
+        }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+        if (e.touches.length > 0) {
+            dispatchMouseEvent('mousemove', e.touches[0]);
+        }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+        e.preventDefault();
+        if (e.changedTouches.length > 0) {
+            dispatchMouseEvent('mouseup', e.changedTouches[0]);
+        }
+    };
+
+    // Use non-passive listeners to allow preventDefault
+    overlay.addEventListener('touchstart', handleTouchStart, { passive: false });
+    overlay.addEventListener('touchmove', handleTouchMove, { passive: false });
+    overlay.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+        overlay.removeEventListener('touchstart', handleTouchStart);
+        overlay.removeEventListener('touchmove', handleTouchMove);
+        overlay.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [is360Active, forcedOrientation]);
+
   const handlePointerDown = (e: React.PointerEvent) => {
     if (is360Active) return;
     if (zoomLevel > 1) {
@@ -716,6 +783,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                       )}
 
                       {isActive && is360 ? (
+                        <>
                         <div 
                           ref={pannellumContainerRef} 
                           className={`w-full h-full bg-black transition-opacity duration-700 ${is360Loading ? 'opacity-0' : 'opacity-100'}`} 
@@ -730,6 +798,21 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                           } : {}}
                           onContextMenu={(e) => e.preventDefault()}
                         />
+                        {/* Touch Overlay for coordinate correction in landscape mode */}
+                        {forcedOrientation === 'landscape' && (
+                             <div 
+                                ref={touchOverlayRef}
+                                className="fixed inset-0 z-[101]"
+                                style={{
+                                    top: '50%',
+                                    left: '50%',
+                                    width: '100vh',
+                                    height: '100vw',
+                                    transform: 'translate(-50%, -50%) rotate(90deg)',
+                                }}
+                             />
+                        )}
+                        </>
                       ) : (
                         <div className="flex items-center justify-center w-full h-full">
                           <ProgressiveImage
