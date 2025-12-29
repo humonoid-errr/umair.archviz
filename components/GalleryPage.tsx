@@ -817,106 +817,103 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
               </button>
             )}
 
-            {/* Sliding Track for Fullscreen Images */}
-            <div
-              className={`w-full h-full flex items-center transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) will-change-transform ${
-                forcedOrientation === 'landscape' ? 'flex-col' : 'flex-row'
-              }`}
-              style={{ 
-                transform: forcedOrientation === 'landscape' 
-                  ? `translateY(-${fullscreenIndex * 100}%)` 
-                  : `translateX(-${fullscreenIndex * 100}%)` 
-              }}
+            {/* Rotatable Content Wrapper - This wraps the slider and 360 viewer */}
+            <div 
+                className="absolute flex items-center justify-center transition-all duration-500 ease-in-out"
+                style={forcedOrientation === 'landscape' ? {
+                    width: '100vh',
+                    height: '100vw',
+                    transform: 'translate(-50%, -50%) rotate(90deg)',
+                    top: '50%',
+                    left: '50%',
+                    position: 'absolute'
+                } : {
+                   width: '100%',
+                   height: '100%',
+                   position: 'relative'
+                }}
             >
-              {galleryImages.map((image, index) => {
-                const isActive = index === fullscreenIndex;
-                const is360 = project.is360 || isImageUrl360(image);
+                {/* Sliding Track for Fullscreen Images */}
+                <div
+                    className="w-full h-full flex flex-row items-center transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) will-change-transform"
+                    style={{ 
+                        transform: `translateX(-${fullscreenIndex * 100}%)` 
+                    }}
+                >
+                    {galleryImages.map((image, index) => {
+                        const isActive = index === fullscreenIndex;
+                        const is360 = project.is360 || isImageUrl360(image);
 
-                return (
-                  <div 
-                    key={`fs-slide-${index}`}
-                    className="w-full h-full flex-shrink-0 flex items-center justify-center overflow-hidden touch-none"
-                    onPointerDown={isActive ? handlePointerDown : undefined}
-                    onPointerMove={isActive ? handlePointerMove : undefined}
-                    onPointerUp={isActive ? handlePointerUp : undefined}
-                    onPointerLeave={isActive ? handlePointerUp : undefined}
-                    style={{ cursor: isActive && zoomLevel > 1 && !is360Active ? 'grab' : 'default' }}
-                  >
-                    <div className="max-w-full max-h-full w-full h-full flex items-center justify-center relative bg-gray-50">
-                      {isActive && is360 && is360Loading && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 overflow-hidden bg-white">
-                          <div 
-                            className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 animate-kenburns opacity-60"
-                            style={{ backgroundImage: `url(${getOptimizedImage(image, 40, 5, false)})` }}
-                          />
-                          <div className="relative flex flex-col items-center">
-                            <div className="relative w-20 h-20">
-                              <div className="absolute inset-0 border-2 border-gray-800 rounded-full animate-ping opacity-10" />
-                              <div className="absolute inset-0 border border-gray-800 rounded-full animate-pulse flex items-center justify-center">
-                                 <div className="w-3 h-3 bg-gray-800 rounded-full" />
-                              </div>
+                        return (
+                            <div 
+                                key={`fs-slide-${index}`}
+                                className="w-full h-full flex-shrink-0 flex items-center justify-center overflow-hidden touch-none relative"
+                                onPointerDown={isActive ? handlePointerDown : undefined}
+                                onPointerMove={isActive ? handlePointerMove : undefined}
+                                onPointerUp={isActive ? handlePointerUp : undefined}
+                                onPointerLeave={isActive ? handlePointerUp : undefined}
+                                style={{ cursor: isActive && zoomLevel > 1 && !is360Active ? 'grab' : 'default' }}
+                            >
+                                <div className="max-w-full max-h-full w-full h-full flex items-center justify-center relative bg-gray-50">
+                                    {isActive && is360 && is360Loading && (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 overflow-hidden bg-white">
+                                        <div 
+                                            className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 animate-kenburns opacity-60"
+                                            style={{ backgroundImage: `url(${getOptimizedImage(image, 40, 5, false)})` }}
+                                        />
+                                        <div className="relative flex flex-col items-center">
+                                            <div className="relative w-20 h-20">
+                                            <div className="absolute inset-0 border-2 border-gray-800 rounded-full animate-ping opacity-10" />
+                                            <div className="absolute inset-0 border border-gray-800 rounded-full animate-pulse flex items-center justify-center">
+                                                <div className="w-3 h-3 bg-gray-800 rounded-full" />
+                                            </div>
+                                            </div>
+                                            <p className="mt-10 text-[10px] font-light tracking-[0.5em] uppercase text-gray-500 animate-pulse">
+                                            Immersing...
+                                            </p>
+                                        </div>
+                                        </div>
+                                    )}
+
+                                    {isActive && is360 ? (
+                                        <>
+                                        <div 
+                                        ref={pannellumContainerRef} 
+                                        className={`w-full h-full bg-black transition-opacity duration-700 ${is360Loading ? 'opacity-0' : 'opacity-100'}`} 
+                                        onContextMenu={(e) => e.preventDefault()}
+                                        />
+                                        {/* Touch Overlay for coordinate correction in landscape mode - now inside the rotated container */}
+                                        {forcedOrientation === 'landscape' && (
+                                            <div 
+                                                ref={touchOverlayRef}
+                                                className="absolute inset-0 z-[101]"
+                                                style={{ touchAction: 'none' }}
+                                            />
+                                        )}
+                                        </>
+                                    ) : (
+                                        <div className="flex items-center justify-center w-full h-full">
+                                        <ProgressiveImage
+                                            src={image}
+                                            alt={`${project.name} gallery image ${index + 1} fullscreen`}
+                                            loading={isActive ? "eager" : "lazy"}
+                                            draggable={false}
+                                            onContextMenu={(e) => e.preventDefault()}
+                                            className={`max-w-full max-h-full object-contain shadow-2xl transition-transform duration-500 ease-in-out`}
+                                            style={isActive ? {
+                                                transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
+                                                transition: isDragging.current ? 'none' : 'transform 0.3s ease-out',
+                                                transformOrigin: 'center center'
+                                            } : {}}
+                                            isProject360={project.is360}
+                                        />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <p className="mt-10 text-[10px] font-light tracking-[0.5em] uppercase text-gray-500 animate-pulse">
-                              Immersing...
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {isActive && is360 ? (
-                        <>
-                        <div 
-                          ref={pannellumContainerRef} 
-                          className={`w-full h-full bg-black transition-opacity duration-700 ${is360Loading ? 'opacity-0' : 'opacity-100'}`} 
-                          style={forcedOrientation === 'landscape' ? { 
-                            position: 'fixed',
-                            top: '50%',
-                            left: '50%',
-                            width: '100vh',
-                            height: '100vw',
-                            transform: 'translate(-50%, -50%) rotate(90deg)',
-                            zIndex: 100
-                          } : {}}
-                          onContextMenu={(e) => e.preventDefault()}
-                        />
-                        {/* Touch Overlay for coordinate correction in landscape mode */}
-                        {forcedOrientation === 'landscape' && (
-                             <div 
-                                ref={touchOverlayRef}
-                                className="fixed inset-0 z-[101]"
-                                style={{
-                                    top: '50%',
-                                    left: '50%',
-                                    width: '100vh',
-                                    height: '100vw',
-                                    transform: 'translate(-50%, -50%) rotate(90deg)',
-                                    touchAction: 'none'
-                                }}
-                             />
-                        )}
-                        </>
-                      ) : (
-                        <div className="flex items-center justify-center w-full h-full">
-                          <ProgressiveImage
-                              src={image}
-                              alt={`${project.name} gallery image ${index + 1} fullscreen`}
-                              loading={isActive ? "eager" : "lazy"}
-                              draggable={false}
-                              onContextMenu={(e) => e.preventDefault()}
-                              className={`max-w-full max-h-full object-contain shadow-2xl transition-transform duration-500 ease-in-out`}
-                              style={isActive ? {
-                                transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel}) ${forcedOrientation === 'landscape' ? 'rotate(90deg) scale(1.4)' : ''}`,
-                                transition: isDragging.current ? 'none' : 'transform 0.3s ease-out',
-                                transformOrigin: 'center center'
-                              } : {}}
-                              isProject360={project.is360}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                        );
+                    })}
+                </div>
             </div>
 
             {zoomLevel <= 1 && (
