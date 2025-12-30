@@ -34,6 +34,9 @@ const Header: React.FC<HeaderProps> = ({
   
   const isLightPage = page !== 'home';
 
+  // Helper to create URL-friendly slugs (must match App.tsx)
+  const getProjectSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+
   // Handle responsiveness
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
@@ -129,16 +132,11 @@ const Header: React.FC<HeaderProps> = ({
   
   const getButtonClasses = () => {
     const color = isLightPage ? 'text-gray-900' : 'text-white';
-    return `cursor-pointer hover:opacity-70 transition-all duration-300 bg-transparent border-none uppercase text-[10px] md:text-xs font-light tracking-widest ${color}`;
+    return `cursor-pointer hover:opacity-70 transition-all duration-300 bg-transparent border-none uppercase text-[10px] md:text-xs font-light tracking-widest ${color} no-underline`;
   };
   
-  const handleMobileNav = (page: Page) => {
-    onNavigate(page);
-    closeMobileMenu();
-  };
-  
-  const handleMobileProjectSelect = (project: Project) => {
-    onSelectProject(project);
+  // Mobile handlers that just close the menu (navigation is handled by href="#...")
+  const handleMobileLinkClick = () => {
     closeMobileMenu();
   };
 
@@ -148,12 +146,13 @@ const Header: React.FC<HeaderProps> = ({
         <div className={getCapsuleClasses()} aria-hidden="true" />
         
         <div className={`relative flex justify-between items-center transition-colors duration-500 ${getTextClasses()}`}>
-          <button
-            onClick={() => onNavigate('home')}
-            className={`text-lg md:text-2xl font-light tracking-[0.3em] md:tracking-[0.5em] uppercase bg-transparent border-none p-0 text-left cursor-pointer hover:opacity-70 transition-all duration-500 ${getTextClasses()}`}
+          <a
+            href="#"
+            className={`text-lg md:text-2xl font-light tracking-[0.3em] md:tracking-[0.5em] uppercase bg-transparent border-none p-0 text-left cursor-pointer hover:opacity-70 transition-all duration-500 ${getTextClasses()} no-underline`}
+            aria-label="Home"
           >
             MOHD UMAIR
-          </button>
+          </a>
           
           <div className="hidden md:block">
             <nav className="flex items-center space-x-6">
@@ -163,7 +162,10 @@ const Header: React.FC<HeaderProps> = ({
                 onMouseEnter={() => setIsWorkMenuOpen(true)}
                 onMouseLeave={() => setIsWorkMenuOpen(false)}
               >
-                <button onClick={() => setIsWorkMenuOpen(prev => !prev)} className={`${getButtonClasses()} flex items-center`}>
+                <button 
+                  onClick={() => setIsWorkMenuOpen(prev => !prev)} 
+                  className={`${getButtonClasses()} flex items-center`}
+                >
                     <span className="text-xl font-thin mr-1">+</span> Work
                 </button>
                 {isWorkMenuOpen && projects.length > 0 && (
@@ -172,9 +174,12 @@ const Header: React.FC<HeaderProps> = ({
                       <ul className="max-h-[70vh] overflow-y-auto py-2">
                         {projects.map(project => (
                             <li key={project.id}>
-                              <button onClick={() => onSelectProject(project)} className="w-full text-left px-6 py-2.5 text-xs font-light hover:bg-white/10 hover:pl-8 transition-all duration-300">
+                              <a 
+                                href={`#${getProjectSlug(project.name)}`}
+                                className="block w-full text-left px-6 py-2.5 text-xs font-light hover:bg-white/10 hover:pl-8 transition-all duration-300 text-white no-underline"
+                              >
                                 {project.name}
-                              </button>
+                              </a>
                             </li>
                           ))
                         }
@@ -186,10 +191,10 @@ const Header: React.FC<HeaderProps> = ({
                   </div>
                 )}
               </div>
-              <button onClick={() => onNavigate('about')} className={getButtonClasses()}>About</button>
-              <button onClick={() => onNavigate('services')} className={getButtonClasses()}>Services</button>
-              <button onClick={() => onNavigate('testimonials')} className={getButtonClasses()}>Testimonials</button>
-              <button onClick={() => onNavigate('contact')} className={getButtonClasses()}>Contact</button>
+              <a href="#about" className={getButtonClasses()}>About</a>
+              <a href="#services" className={getButtonClasses()}>Services</a>
+              <a href="#testimonials" className={getButtonClasses()}>Testimonials</a>
+              <a href="#contact" className={getButtonClasses()}>Contact</a>
               <div className="flex items-center pl-4 space-x-4">
                 <a href="https://linkedin.com/in/mumair-" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity"><LinkedinIcon className="w-5 h-5" /></a>
                 <a href="https://wa.me/919412505677" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity"><WhatsAppIcon className="w-5 h-5" /></a>
@@ -216,16 +221,22 @@ const Header: React.FC<HeaderProps> = ({
               <ul className="pl-2 space-y-4">
                 {projects.map(project => (
                   <li key={project.id}>
-                    <button onClick={() => handleMobileProjectSelect(project)} className="w-full text-left py-1 text-2xl font-light text-gray-900 uppercase tracking-tighter">{project.name}</button>
+                    <a 
+                      href={`#${getProjectSlug(project.name)}`}
+                      onClick={handleMobileLinkClick}
+                      className="block w-full text-left py-1 text-2xl font-light text-gray-900 uppercase tracking-tighter no-underline"
+                    >
+                      {project.name}
+                    </a>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="flex flex-col space-y-6">
-              <button onClick={() => handleMobileNav('about')} className="text-4xl font-light text-left uppercase tracking-tighter">About</button>
-              <button onClick={() => handleMobileNav('services')} className="text-4xl font-light text-left uppercase tracking-tighter">Services</button>
-              <button onClick={() => handleMobileNav('testimonials')} className="text-4xl font-light text-left uppercase tracking-tighter">Testimonials</button>
-              <button onClick={() => handleMobileNav('contact')} className="text-4xl font-light text-left uppercase tracking-tighter">Contact</button>
+              <a href="#about" onClick={handleMobileLinkClick} className="text-4xl font-light text-left uppercase tracking-tighter no-underline text-gray-900">About</a>
+              <a href="#services" onClick={handleMobileLinkClick} className="text-4xl font-light text-left uppercase tracking-tighter no-underline text-gray-900">Services</a>
+              <a href="#testimonials" onClick={handleMobileLinkClick} className="text-4xl font-light text-left uppercase tracking-tighter no-underline text-gray-900">Testimonials</a>
+              <a href="#contact" onClick={handleMobileLinkClick} className="text-4xl font-light text-left uppercase tracking-tighter no-underline text-gray-900">Contact</a>
             </div>
           </nav>
         </div>
