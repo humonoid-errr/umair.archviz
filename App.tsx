@@ -26,6 +26,55 @@ const App: React.FC = () => {
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
 
+  // Helper to create URL-friendly slugs from project names
+  const getProjectSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+
+  // --- HASH ROUTING LOGIC ---
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      
+      // Default to home if no hash
+      if (!hash) {
+        setCurrentPage('home');
+        setSelectedProject(null);
+        setIsZenMode(false);
+        setIsGalleryFullscreen(false);
+        return;
+      }
+
+      // Check if hash matches a standard page
+      const validPages: Page[] = ['about', 'services', 'testimonials', 'contact'];
+      if (validPages.includes(hash as Page)) {
+        setCurrentPage(hash as Page);
+        setSelectedProject(null);
+        setIsZenMode(false);
+        setIsGalleryFullscreen(false);
+        return;
+      }
+
+      // Check if hash matches a project slug
+      const project = projects.find(p => getProjectSlug(p.name) === hash);
+      if (project) {
+        setSelectedProject(project);
+        setCurrentPage('gallery');
+        setIsZenMode(false);
+        setIsGalleryFullscreen(false);
+        return;
+      }
+
+      // Fallback for invalid hashes
+      setCurrentPage('home');
+    };
+
+    // Handle initial load
+    handleHashChange();
+
+    // Listen for hash changes (back/forward button support)
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [projects]);
+
   const allHeroImages: RandomImage[] = useMemo(() => {
     return projects
       .filter(project => !project.is360) 
@@ -94,19 +143,26 @@ const App: React.FC = () => {
     return () => clearInterval(imageInterval);
   }, [currentPage, handleNextHeroImage, allHeroImages.length, isZenMode, showIntro]);
 
+  // Updated navigation to use Hash
   const handleSelectProject = useCallback((project: Project) => {
-    setSelectedProject(project);
-    setCurrentPage('gallery');
-    setIsZenMode(false);
-    setIsGalleryFullscreen(false);
+    window.location.hash = getProjectSlug(project.name);
   }, []);
 
+  // Updated navigation to use Hash
   const handleNavigate = useCallback((page: Page) => {
-    setCurrentPage(page);
-    setIsZenMode(false);
-    setIsGalleryFullscreen(false);
-    if (page !== 'gallery') {
-      setSelectedProject(null);
+    if (page === 'home') {
+      // Remove hash for home
+      history.pushState("", document.title, window.location.pathname + window.location.search);
+      // Manually trigger hashchange logic because pushState doesn't trigger it
+      // actually, just setting location.hash = '' leaves a '#' symbol usually.
+      // Let's just use empty hash:
+      window.location.hash = ''; 
+    } else if (page === 'gallery') {
+      // Gallery navigation via menu without a project isn't really supported in this flow, 
+      // but if it happens, we just let logic handle it (likely goes home)
+      window.location.hash = ''; 
+    } else {
+      window.location.hash = page;
     }
   }, []);
   
