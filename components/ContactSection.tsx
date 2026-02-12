@@ -40,7 +40,7 @@ const ContactSection: React.FC = () => {
               <a href="https://linkedin.com/in/mumair-" target="_blank" rel="noopener noreferrer" className="hover:underline font-light text-gray-700 break-words transition-all duration-300 hover:translate-x-2 inline-block">linkedin.com/in/mumair-</a>
               
               <span className="font-light text-gray-500 text-left whitespace-nowrap">Email :</span>
-              <a href="mailto:hello@umair-archviz.work" className="hover:underline font-light text-gray-700 break-words transition-all duration-300 hover:translate-x-2 inline-block">hello@umair-archviz.work</a>
+              <a href="mailto:umairsaifi10@gmail.com" className="hover:underline font-light text-gray-700 break-words transition-all duration-300 hover:translate-x-2 inline-block">umairsaifi10@gmail.com</a>
               
               <span className="font-light text-gray-500 text-left whitespace-nowrap">Address:</span>
               <span className="font-light text-gray-700 transition-all duration-300 hover:translate-x-2 inline-block cursor-default">Available Worldwide</span>
