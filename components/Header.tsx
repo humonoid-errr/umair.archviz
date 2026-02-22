@@ -197,7 +197,7 @@ const Header: React.FC<HeaderProps> = ({
               <a href="#contact" className={getButtonClasses()}>Contact</a>
               <div className="flex items-center pl-4 space-x-4">
                 <a href="https://linkedin.com/in/mumair-" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity"><LinkedinIcon className="w-5 h-5" /></a>
-                <a href="https://wa.me/919412505677" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity"><WhatsAppIcon className="w-5 h-5" /></a>
+                <a href="https://wa.me/918439144238" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity"><WhatsAppIcon className="w-5 h-5" /></a>
               </div>
             </nav>
           </div>
