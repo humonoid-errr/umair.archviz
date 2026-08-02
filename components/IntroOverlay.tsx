@@ -53,7 +53,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
 
         <div className="space-y-3 text-zinc-300 text-xs md:text-sm font-light leading-relaxed text-left bg-black/50 p-4 md:p-5 rounded-xl border border-white/10">
           <p className="font-semibold text-white tracking-wide">
-            Copyright (c) 2025 Mohd Umair<br />
+            Copyright (c) 2026 Mohd Umair<br />
             All rights reserved.
           </p>
           <p className="text-zinc-300">
