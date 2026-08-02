@@ -6,17 +6,6 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>umair.archviz</title>
-
-    <!-- Google Tag Manager -->
-    <script>
-      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','GTM-5GQB8MVZ');
-    </script>
-    <!-- End Google Tag Manager -->
-
     <!-- Pannellum 360 Viewer -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
@@ -124,11 +113,59 @@
         user-select: text;
       }
 
-      /* HIDE DEFAULT CURSOR on Desktop */
+      /* Custom Cursor & UX Styling */
       @media (pointer: fine) {
-        *, *::before, *::after {
+        body, a, button, [role="button"] {
           cursor: none !important;
         }
+        /* Restore standard native cursor for precision inputs like sliders, text, forms, and drag handles */
+        input, textarea, select, input[type="range"], .pannellum-container {
+          cursor: auto !important;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+          cursor: grab !important;
+        }
+        input[type="range"]::-webkit-slider-thumb:active {
+          cursor: grabbing !important;
+        }
+      }
+
+      /* Range Input Custom Thumb Styles for Zoom Slider */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 9999px;
+        outline: none;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #ffffff;
+        cursor: pointer !important;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+        transition: transform 0.15s ease, background-color 0.15s ease;
+      }
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.3);
+        background: #ffffff;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: none;
+        cursor: pointer !important;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+        transition: transform 0.15s ease, background-color 0.15s ease;
+      }
+      input[type="range"]::-moz-range-thumb:hover {
+        transform: scale(1.3);
+        background: #ffffff;
       }
 
       /* Custom Pannellum UI Overrides */
@@ -154,6 +191,7 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
