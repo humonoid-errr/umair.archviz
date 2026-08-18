@@ -32,15 +32,30 @@ const trackPageView = (pageTitle: string, hash: string = '') => {
 
   if (typeof gtag !== 'function') return;
 
-  const pageLocation =
-    window.location.origin +
-    window.location.pathname +
-    window.location.search +
-    (hash ? `#${hash}` : '');
+  // Convert the hash route into a virtual analytics path.
+  // Example:
+  // #piano-house -> /piano-house
+  // #about -> /about
+  // no hash -> /
+  const virtualPath = hash ? `/${hash}` : '/';
+
+  const pageLocation = `${window.location.origin}${virtualPath}`;
 
   gtag('event', 'page_view', {
     page_title: pageTitle,
     page_location: pageLocation,
+  });
+};
+
+const trackProjectView = (project: Project) => {
+  if (typeof window === 'undefined') return;
+
+  const gtag = (window as any).gtag;
+
+  if (typeof gtag !== 'function') return;
+
+  gtag('event', 'project_view', {
+    project_name: project.name,
   });
 };
 
@@ -128,7 +143,11 @@ const App: React.FC = () => {
         setIsZenMode(false);
         setIsGalleryFullscreen(false);
 
+        // GA4 virtual page view
         trackPageView(`${project.name} | umair.archviz`, hash);
+
+        // Separate project event for easier reporting
+        trackProjectView(project);
 
         return;
       }
@@ -201,6 +220,7 @@ const App: React.FC = () => {
 
       imagesToPrecache.forEach((img) => {
         const preloader = new Image();
+
         preloader.src = getOptimizedImage(
           img.imageUrl,
           2048,
