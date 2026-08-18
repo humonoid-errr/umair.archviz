@@ -2,28 +2,53 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>umair.archviz</title>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FPT82OHXJB"></script>
+    <!-- =========================================================
+         GOOGLE ANALYTICS 4
+         Measurement ID: G-FPT820HXJB
+         IMPORTANT: This must exactly match your GA4 Web Stream.
+         ========================================================= -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-FPT820HXJB"
+    ></script>
+
     <script>
       window.dataLayer = window.dataLayer || [];
+
       function gtag() {
         dataLayer.push(arguments);
       }
-      gtag('js', new Date());
 
-      gtag('config', 'G-FPT82OHXJB');
+      gtag("js", new Date());
+
+      gtag("config", "G-FPT820HXJB");
     </script>
 
-    <!-- Pannellum 360 Viewer -->
+    <!-- =========================================================
+         PANNELLUM 360 VIEWER
+         ========================================================= -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"
     />
-    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"
+    ></script>
+
+    <!-- =========================================================
+         TAILWIND CSS
+         ========================================================= -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
@@ -31,39 +56,57 @@
         theme: {
           extend: {
             fontFamily: {
-              sans: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
-              serif: ['Georgia', 'Times New Roman', 'serif'],
+              sans: ['"Helvetica Neue"', "Helvetica", "Arial", "sans-serif"],
+              serif: ["Georgia", "Times New Roman", "serif"],
             },
+
             keyframes: {
               fadeIn: {
-                '0%': { opacity: '0.7' },
-                '100%': { opacity: '1' },
-              },
-              contentFadeIn: {
-                '0%': { opacity: '0', transform: 'translateY(10px)' },
-                '100%': { opacity: '1' },
-              },
-              kenburns: {
-                '0%': {
-                  transform: 'scale(1) translate(0, 0)',
+                "0%": {
+                  opacity: "0.7",
                 },
-                '100%': {
-                  transform: 'scale(1.1) translate(-1%, 1%)',
+                "100%": {
+                  opacity: "1",
+                },
+              },
+
+              contentFadeIn: {
+                "0%": {
+                  opacity: "0",
+                  transform: "translateY(10px)",
+                },
+                "100%": {
+                  opacity: "1",
+                },
+              },
+
+              kenburns: {
+                "0%": {
+                  transform: "scale(1) translate(0, 0)",
+                },
+                "100%": {
+                  transform: "scale(1.1) translate(-1%, 1%)",
                 },
               },
             },
+
             animation: {
-              fadeIn: 'fadeIn 1.5s ease-in-out',
-              contentFadeIn: 'contentFadeIn 0.75s ease-out',
-              kenburns: 'kenburns 15s ease-out infinite alternate-reverse',
+              fadeIn: "fadeIn 1.5s ease-in-out",
+              contentFadeIn: "contentFadeIn 0.75s ease-out",
+              kenburns:
+                "kenburns 15s ease-out infinite alternate-reverse",
             },
           },
         },
       };
     </script>
 
+    <!-- =========================================================
+         GLOBAL STYLES
+         ========================================================= -->
     <style>
       /* Global Minimal Scrollbar */
+
       ::-webkit-scrollbar {
         width: 3px;
         height: 3px;
@@ -88,6 +131,7 @@
       }
 
       /* Utility to hide scrollbar */
+
       .scrollbar-hide::-webkit-scrollbar {
         display: none;
       }
@@ -98,24 +142,28 @@
       }
 
       /* Firefox Support */
+
       html {
         scrollbar-width: thin;
         scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
       }
 
-      /* Security / Content Protection Styles */
+      /* Security / Content Protection */
+
       img {
         -webkit-user-drag: none;
         -khtml-user-drag: none;
         -moz-user-drag: none;
         -o-user-drag: none;
         user-drag: none;
+
         -webkit-touch-callout: none;
+
         user-select: none;
+
         pointer-events: auto;
       }
 
-      /* Prevent text selection generally to discourage copying */
       body {
         -webkit-user-select: none;
         -moz-user-select: none;
@@ -123,7 +171,8 @@
         user-select: none;
       }
 
-      /* Allow text selection in inputs and textareas */
+      /* Allow text selection in inputs */
+
       input,
       textarea {
         -webkit-user-select: text;
@@ -132,7 +181,8 @@
         user-select: text;
       }
 
-      /* Custom Cursor & UX Styling */
+      /* Custom Cursor */
+
       @media (pointer: fine) {
         body,
         a,
@@ -141,7 +191,6 @@
           cursor: none !important;
         }
 
-        /* Restore standard native cursor for precision inputs */
         input,
         textarea,
         select,
@@ -159,25 +208,37 @@
         }
       }
 
-      /* Range Input Custom Thumb Styles for Zoom Slider */
+      /* Range Input */
+
       input[type="range"] {
         -webkit-appearance: none;
         appearance: none;
+
         background: rgba(255, 255, 255, 0.25);
+
         border-radius: 9999px;
+
         outline: none;
       }
 
       input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
+
         width: 14px;
         height: 14px;
+
         border-radius: 50%;
+
         background: #ffffff;
+
         cursor: pointer !important;
+
         box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-        transition: transform 0.15s ease, background-color 0.15s ease;
+
+        transition:
+          transform 0.15s ease,
+          background-color 0.15s ease;
       }
 
       input[type="range"]::-webkit-slider-thumb:hover {
@@ -188,12 +249,20 @@
       input[type="range"]::-moz-range-thumb {
         width: 14px;
         height: 14px;
+
         border-radius: 50%;
+
         background: #ffffff;
+
         border: none;
+
         cursor: pointer !important;
+
         box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-        transition: transform 0.15s ease, background-color 0.15s ease;
+
+        transition:
+          transform 0.15s ease,
+          background-color 0.15s ease;
       }
 
       input[type="range"]::-moz-range-thumb:hover {
@@ -201,23 +270,30 @@
         background: #ffffff;
       }
 
-      /* Custom Pannellum UI Overrides */
+      /* Pannellum */
+
       .pnlm-container {
         background: transparent !important;
       }
 
       .pnlm-load-box {
         background: rgba(0, 0, 0, 0.5) !important;
+
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
+
         border-radius: 8px !important;
       }
 
-      /* Hide default zoom buttons because user wants only the bar */
+      /* Hide default Pannellum zoom buttons */
+
       .pnlm-zoom-controls {
         display: none !important;
       }
     </style>
 
+    <!-- =========================================================
+         REACT IMPORT MAP
+         ========================================================= -->
     <script type="importmap">
       {
         "imports": {
@@ -228,11 +304,16 @@
       }
     </script>
 
+    <!-- Main CSS -->
+
     <link rel="stylesheet" href="/index.css" />
   </head>
 
   <body>
     <div id="root"></div>
+
+    <!-- React Application -->
+
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
