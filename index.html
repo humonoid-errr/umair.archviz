@@ -8,14 +8,13 @@
       content="width=device-width, initial-scale=1.0"
     />
 
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <title>umair.archviz</title>
 
     <!-- =========================================================
          GOOGLE ANALYTICS 4
          Measurement ID: G-FPT820HXJB
-         IMPORTANT: This must exactly match your GA4 Web Stream.
          ========================================================= -->
     <script
       async
@@ -30,23 +29,15 @@
       }
 
       gtag("js", new Date());
-
-  gtag("config", "G-FPT820HXJB", {
-    send_page_view: false
-  });
-</script>
+      gtag("config", "G-FPT820HXJB", {
+        send_page_view: false
+      });
+    </script>
 
     <!-- =========================================================
          PANNELLUM 360 VIEWER
+         Loaded on demand by GalleryPage when a 360 image is opened.
          ========================================================= -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"
-    />
-
-    <script
-      src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"
-    ></script>
 
     <!-- =========================================================
          TAILWIND CSS
@@ -64,12 +55,8 @@
 
             keyframes: {
               fadeIn: {
-                "0%": {
-                  opacity: "0.7",
-                },
-                "100%": {
-                  opacity: "1",
-                },
+                "0%": { opacity: "0.7" },
+                "100%": { opacity: "1" },
               },
 
               contentFadeIn: {
@@ -107,8 +94,6 @@
          GLOBAL STYLES
          ========================================================= -->
     <style>
-      /* Global Minimal Scrollbar */
-
       ::-webkit-scrollbar {
         width: 3px;
         height: 3px;
@@ -132,8 +117,6 @@
         display: none;
       }
 
-      /* Utility to hide scrollbar */
-
       .scrollbar-hide::-webkit-scrollbar {
         display: none;
       }
@@ -143,14 +126,10 @@
         scrollbar-width: none;
       }
 
-      /* Firefox Support */
-
       html {
         scrollbar-width: thin;
         scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
       }
-
-      /* Security / Content Protection */
 
       img {
         -webkit-user-drag: none;
@@ -158,11 +137,8 @@
         -moz-user-drag: none;
         -o-user-drag: none;
         user-drag: none;
-
         -webkit-touch-callout: none;
-
         user-select: none;
-
         pointer-events: auto;
       }
 
@@ -173,8 +149,6 @@
         user-select: none;
       }
 
-      /* Allow text selection in inputs */
-
       input,
       textarea {
         -webkit-user-select: text;
@@ -182,8 +156,6 @@
         -ms-user-select: text;
         user-select: text;
       }
-
-      /* Custom Cursor */
 
       @media (pointer: fine) {
         body,
@@ -210,34 +182,23 @@
         }
       }
 
-      /* Range Input */
-
       input[type="range"] {
         -webkit-appearance: none;
         appearance: none;
-
         background: rgba(255, 255, 255, 0.25);
-
         border-radius: 9999px;
-
         outline: none;
       }
 
       input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-
         width: 14px;
         height: 14px;
-
         border-radius: 50%;
-
         background: #ffffff;
-
         cursor: pointer !important;
-
         box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-
         transition:
           transform 0.15s ease,
           background-color 0.15s ease;
@@ -251,17 +212,11 @@
       input[type="range"]::-moz-range-thumb {
         width: 14px;
         height: 14px;
-
         border-radius: 50%;
-
         background: #ffffff;
-
         border: none;
-
         cursor: pointer !important;
-
         box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-
         transition:
           transform 0.15s ease,
           background-color 0.15s ease;
@@ -272,21 +227,15 @@
         background: #ffffff;
       }
 
-      /* Pannellum */
-
       .pnlm-container {
         background: transparent !important;
       }
 
       .pnlm-load-box {
         background: rgba(0, 0, 0, 0.5) !important;
-
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
-
         border-radius: 8px !important;
       }
-
-      /* Hide default Pannellum zoom buttons */
 
       .pnlm-zoom-controls {
         display: none !important;
@@ -307,14 +256,11 @@
     </script>
 
     <!-- Main CSS -->
-
     <link rel="stylesheet" href="/index.css" />
   </head>
 
   <body>
     <div id="root"></div>
-
-    <!-- React Application -->
 
     <script type="module" src="/index.tsx"></script>
   </body>
