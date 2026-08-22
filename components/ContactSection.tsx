@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { getOptimizedImage } from '../utils/imageOptimizer';
 
@@ -44,6 +43,16 @@ const ContactSection: React.FC = () => {
               
               <span className="font-light text-gray-500 text-left whitespace-nowrap">Address:</span>
               <span className="font-light text-gray-700 transition-all duration-300 hover:translate-x-2 inline-block cursor-default">Available Worldwide</span>
+            </div>
+
+            {/* Primary CTA */}
+            <div className="flex justify-center mt-12 md:mt-16">
+              <a
+                href="mailto:umairsaifi10@gmail.com?subject=Project%20Enquiry"
+                className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-gray-900 text-white text-xs uppercase tracking-[0.2em] font-light hover:bg-gray-700 hover:scale-105 transition-all duration-300 shadow-lg"
+              >
+                Start a Project
+              </a>
             </div>
             
             <div className="mt-16 text-center">
