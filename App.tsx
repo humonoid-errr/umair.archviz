@@ -32,13 +32,7 @@ const trackPageView = (pageTitle: string, hash: string = '') => {
 
   if (typeof gtag !== 'function') return;
 
-  // Convert the hash route into a virtual analytics path.
-  // Example:
-  // #piano-house -> /piano-house
-  // #about -> /about
-  // no hash -> /
   const virtualPath = hash ? `/${hash}` : '/';
-
   const pageLocation = `${window.location.origin}${virtualPath}`;
 
   gtag('event', 'page_view', {
@@ -73,7 +67,6 @@ const App: React.FC = () => {
   const projects = initialProjects;
   const aboutContent = initialAboutContent;
 
-  // Helper to create URL-friendly slugs from project names
   const getProjectSlug = (name: string) =>
     name.toLowerCase().replace(/\s+/g, '-');
 
@@ -85,24 +78,14 @@ const App: React.FC = () => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace(/^#/, '');
 
-      /* -----------------------------------------------------
-         HOME
-         ----------------------------------------------------- */
-
       if (!hash) {
         setCurrentPage('home');
         setSelectedProject(null);
         setIsZenMode(false);
         setIsGalleryFullscreen(false);
-
         trackPageView('Home | umair.archviz', '');
-
         return;
       }
-
-      /* -----------------------------------------------------
-         STANDARD PAGES
-         ----------------------------------------------------- */
 
       const validPages: Page[] = [
         'about',
@@ -113,7 +96,6 @@ const App: React.FC = () => {
 
       if (validPages.includes(hash as Page)) {
         const page = hash as Page;
-
         setCurrentPage(page);
         setSelectedProject(null);
         setIsZenMode(false);
@@ -125,13 +107,8 @@ const App: React.FC = () => {
           ' | umair.archviz';
 
         trackPageView(pageTitle, hash);
-
         return;
       }
-
-      /* -----------------------------------------------------
-         PROJECT PAGES
-         ----------------------------------------------------- */
 
       const project = projects.find(
         (p) => getProjectSlug(p.name) === hash
@@ -142,32 +119,19 @@ const App: React.FC = () => {
         setCurrentPage('gallery');
         setIsZenMode(false);
         setIsGalleryFullscreen(false);
-
-        // GA4 virtual page view
         trackPageView(`${project.name} | umair.archviz`, hash);
-
-        // Separate project event for easier reporting
         trackProjectView(project);
-
         return;
       }
-
-      /* -----------------------------------------------------
-         INVALID HASH
-         ----------------------------------------------------- */
 
       setCurrentPage('home');
       setSelectedProject(null);
       setIsZenMode(false);
       setIsGalleryFullscreen(false);
-
       trackPageView('Home | umair.archviz', '');
     };
 
-    // Handle initial load
     handleHashChange();
-
-    // Listen for hash changes
     window.addEventListener('hashchange', handleHashChange);
 
     return () => {
@@ -177,31 +141,18 @@ const App: React.FC = () => {
 
   /* =========================================================
      HERO IMAGES
+     Only project cover images are used for the hero rotation.
+     Gallery images are loaded only when the project is opened.
      ========================================================= */
 
   const allHeroImages: RandomImage[] = useMemo(() => {
     return projects
       .filter((project) => !project.is360)
-      .flatMap((project) => {
-        const potentialImages = [
-          {
-            imageUrl: project.imageUrl,
-            projectName: project.name,
-          },
-          ...project.galleryImages.map((galleryImg) => ({
-            imageUrl: galleryImg,
-            projectName: project.name,
-          })),
-        ];
-
-        return potentialImages
-          .filter((img) => !isImageUrl360(img.imageUrl))
-          .map((img) => ({
-            ...img,
-            imageUrl: img.imageUrl,
-            projectName: img.projectName,
-          }));
-      });
+      .map((project) => ({
+        imageUrl: project.imageUrl,
+        projectName: project.name,
+      }))
+      .filter((img) => !isImageUrl360(img.imageUrl));
   }, [projects]);
 
   const [currentHeroImageIndex, setCurrentHeroImageIndex] = useState(() => {
@@ -211,24 +162,44 @@ const App: React.FC = () => {
   });
 
   /* =========================================================
-     IMAGE PRE-CACHING
+     HERO IMAGE PRELOADING
+     Only preload the current hero image. The next image is
+     warmed after the intro finishes, without downloading a
+     batch of five large renders during the initial load.
      ========================================================= */
 
   useEffect(() => {
-    if (showIntro && allHeroImages.length > 0) {
-      const imagesToPrecache = allHeroImages.slice(0, 5);
+    if (allHeroImages.length === 0) return;
 
-      imagesToPrecache.forEach((img) => {
-        const preloader = new Image();
+    const current = allHeroImages[currentHeroImageIndex];
+    if (!current) return;
 
-        preloader.src = getOptimizedImage(
-          img.imageUrl,
-          2048,
-          85
-        );
-      });
-    }
-  }, [showIntro, allHeroImages]);
+    const preload = new Image();
+    preload.decoding = 'async';
+    preload.src = getOptimizedImage(current.imageUrl, 1600, 82);
+
+    return () => {
+      preload.onload = null;
+      preload.onerror = null;
+    };
+  }, [allHeroImages, currentHeroImageIndex]);
+
+  useEffect(() => {
+    if (showIntro || allHeroImages.length < 2) return;
+
+    const nextIndex =
+      (currentHeroImageIndex + 1) % allHeroImages.length;
+    const next = allHeroImages[nextIndex];
+    if (!next) return;
+
+    const timer = window.setTimeout(() => {
+      const preload = new Image();
+      preload.decoding = 'async';
+      preload.src = getOptimizedImage(next.imageUrl, 1600, 82);
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [showIntro, allHeroImages, currentHeroImageIndex]);
 
   /* =========================================================
      CONTENT PROTECTION
@@ -245,9 +216,7 @@ const App: React.FC = () => {
       if (
         e.ctrlKey &&
         e.shiftKey &&
-        (e.key === 'I' ||
-          e.key === 'J' ||
-          e.key === 'C')
+        (e.key === 'I' || e.key === 'J' || e.key === 'C')
       ) {
         e.preventDefault();
       }
@@ -257,26 +226,12 @@ const App: React.FC = () => {
       if (e.ctrlKey && e.key === 's') e.preventDefault();
     };
 
-    document.addEventListener(
-      'contextmenu',
-      handleContextMenu
-    );
-
-    document.addEventListener(
-      'keydown',
-      handleKeyDown
-    );
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.removeEventListener(
-        'contextmenu',
-        handleContextMenu
-      );
-
-      document.removeEventListener(
-        'keydown',
-        handleKeyDown
-      );
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -288,14 +243,10 @@ const App: React.FC = () => {
     if (allHeroImages.length === 0) return;
 
     const nextIndex =
-      (currentHeroImageIndex + 1) %
-      allHeroImages.length;
+      (currentHeroImageIndex + 1) % allHeroImages.length;
 
     setCurrentHeroImageIndex(nextIndex);
-  }, [
-    allHeroImages.length,
-    currentHeroImageIndex,
-  ]);
+  }, [allHeroImages.length, currentHeroImageIndex]);
 
   useEffect(() => {
     if (
@@ -307,11 +258,7 @@ const App: React.FC = () => {
       return;
     }
 
-    const imageInterval = setInterval(
-      handleNextHeroImage,
-      6000
-    );
-
+    const imageInterval = setInterval(handleNextHeroImage, 6000);
     return () => clearInterval(imageInterval);
   }, [
     currentPage,
@@ -336,25 +283,21 @@ const App: React.FC = () => {
      STANDARD PAGE NAVIGATION
      ========================================================= */
 
-  const handleNavigate = useCallback(
-    (page: Page) => {
-      if (page === 'home') {
-        history.pushState(
-          '',
-          document.title,
-          window.location.pathname +
-            window.location.search
-        );
+  const handleNavigate = useCallback((page: Page) => {
+    if (page === 'home') {
+      history.pushState(
+        '',
+        document.title,
+        window.location.pathname + window.location.search
+      );
 
-        window.location.hash = '';
-      } else if (page === 'gallery') {
-        window.location.hash = '';
-      } else {
-        window.location.hash = page;
-      }
-    },
-    []
-  );
+      window.location.hash = '';
+    } else if (page === 'gallery') {
+      window.location.hash = '';
+    } else {
+      window.location.hash = page;
+    }
+  }, []);
 
   /* =========================================================
      CURRENT HERO IMAGE
@@ -372,31 +315,22 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentPage) {
       case 'about':
-        return (
-          <AboutSection content={aboutContent} />
-        );
-
+        return <AboutSection content={aboutContent} />;
       case 'services':
         return <ServicesSection />;
-
       case 'testimonials':
         return <TestimonialsSection />;
-
       case 'contact':
         return <ContactSection />;
-
       case 'gallery':
         return (
           selectedProject && (
             <GalleryPage
               project={selectedProject}
-              onFullscreenChange={
-                setIsGalleryFullscreen
-              }
+              onFullscreenChange={setIsGalleryFullscreen}
             />
           )
         );
-
       default:
         return null;
     }
@@ -409,9 +343,7 @@ const App: React.FC = () => {
   return (
     <>
       {showIntro && (
-        <IntroOverlay
-          onComplete={() => setShowIntro(false)}
-        />
+        <IntroOverlay onComplete={() => setShowIntro(false)} />
       )}
 
       <CustomCursor />
@@ -431,9 +363,7 @@ const App: React.FC = () => {
             image={currentHeroImage}
             onSkip={handleNextHeroImage}
             isZenMode={isZenMode}
-            onToggleZenMode={() =>
-              setIsZenMode(!isZenMode)
-            }
+            onToggleZenMode={() => setIsZenMode(!isZenMode)}
           />
         </div>
       ) : (
