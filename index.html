@@ -2,48 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
     <title>umair.archviz</title>
 
-    <!-- =========================================================
-         GOOGLE ANALYTICS 4
-         Measurement ID: G-FPT820HXJB
-         ========================================================= -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-FPT820HXJB"
-    ></script>
-
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FPT820HXJB"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-
+      function gtag() { dataLayer.push(arguments); }
       gtag("js", new Date());
-      gtag("config", "G-FPT820HXJB", {
-        send_page_view: false
-      });
+      gtag("config", "G-FPT820HXJB", { send_page_view: false });
     </script>
 
-    <!-- =========================================================
-         PANNELLUM 360 VIEWER
-         Loaded on demand by GalleryPage when a 360 image is opened.
-         ========================================================= -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 
-    <!-- =========================================================
-         TAILWIND CSS
-         ========================================================= -->
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script>
       tailwind.config = {
         theme: {
@@ -52,199 +26,49 @@
               sans: ['"Helvetica Neue"', "Helvetica", "Arial", "sans-serif"],
               serif: ["Georgia", "Times New Roman", "serif"],
             },
-
             keyframes: {
-              fadeIn: {
-                "0%": { opacity: "0.7" },
-                "100%": { opacity: "1" },
-              },
-
-              contentFadeIn: {
-                "0%": {
-                  opacity: "0",
-                  transform: "translateY(10px)",
-                },
-                "100%": {
-                  opacity: "1",
-                },
-              },
-
-              kenburns: {
-                "0%": {
-                  transform: "scale(1) translate(0, 0)",
-                },
-                "100%": {
-                  transform: "scale(1.1) translate(-1%, 1%)",
-                },
-              },
+              fadeIn: { "0%": { opacity: "0.7" }, "100%": { opacity: "1" } },
+              contentFadeIn: { "0%": { opacity: "0", transform: "translateY(10px)" }, "100%": { opacity: "1" } },
+              kenburns: { "0%": { transform: "scale(1) translate(0, 0)" }, "100%": { transform: "scale(1.1) translate(-1%, 1%)" } },
             },
-
             animation: {
               fadeIn: "fadeIn 1.5s ease-in-out",
               contentFadeIn: "contentFadeIn 0.75s ease-out",
-              kenburns:
-                "kenburns 15s ease-out infinite alternate-reverse",
+              kenburns: "kenburns 15s ease-out infinite alternate-reverse",
             },
           },
         },
       };
     </script>
 
-    <!-- =========================================================
-         GLOBAL STYLES
-         ========================================================= -->
     <style>
-      ::-webkit-scrollbar {
-        width: 3px;
-        height: 3px;
-      }
-
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-        transition: background 0.3s;
-      }
-
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 0, 0, 0.3);
-      }
-
-      ::-webkit-scrollbar-button {
-        display: none;
-      }
-
-      .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-      }
-
-      .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-
-      html {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
-      }
-
-      img {
-        -webkit-user-drag: none;
-        -khtml-user-drag: none;
-        -moz-user-drag: none;
-        -o-user-drag: none;
-        user-drag: none;
-        -webkit-touch-callout: none;
-        user-select: none;
-        pointer-events: auto;
-      }
-
-      body {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
-
-      input,
-      textarea {
-        -webkit-user-select: text;
-        -moz-user-select: text;
-        -ms-user-select: text;
-        user-select: text;
-      }
-
+      ::-webkit-scrollbar { width: 3px; height: 3px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; transition: background 0.3s; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+      ::-webkit-scrollbar-button { display: none; }
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      html { scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.1) transparent; }
+      img { -webkit-user-drag: none; -khtml-user-drag: none; -moz-user-drag: none; -o-user-drag: none; user-drag: none; -webkit-touch-callout: none; user-select: none; pointer-events: auto; }
+      body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+      input, textarea { -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
       @media (pointer: fine) {
-        body,
-        a,
-        button,
-        [role="button"] {
-          cursor: none !important;
-        }
-
-        input,
-        textarea,
-        select,
-        input[type="range"],
-        .pannellum-container {
-          cursor: auto !important;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-          cursor: grab !important;
-        }
-
-        input[type="range"]::-webkit-slider-thumb:active {
-          cursor: grabbing !important;
-        }
+        body, a, button, [role="button"] { cursor: none !important; }
+        input, textarea, select, input[type="range"], .pannellum-container { cursor: auto !important; }
+        input[type="range"]::-webkit-slider-thumb { cursor: grab !important; }
+        input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing !important; }
       }
-
-      input[type="range"] {
-        -webkit-appearance: none;
-        appearance: none;
-        background: rgba(255, 255, 255, 0.25);
-        border-radius: 9999px;
-        outline: none;
-      }
-
-      input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: #ffffff;
-        cursor: pointer !important;
-        box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-        transition:
-          transform 0.15s ease,
-          background-color 0.15s ease;
-      }
-
-      input[type="range"]::-webkit-slider-thumb:hover {
-        transform: scale(1.3);
-        background: #ffffff;
-      }
-
-      input[type="range"]::-moz-range-thumb {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: #ffffff;
-        border: none;
-        cursor: pointer !important;
-        box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-        transition:
-          transform 0.15s ease,
-          background-color 0.15s ease;
-      }
-
-      input[type="range"]::-moz-range-thumb:hover {
-        transform: scale(1.3);
-        background: #ffffff;
-      }
-
-      .pnlm-container {
-        background: transparent !important;
-      }
-
-      .pnlm-load-box {
-        background: rgba(0, 0, 0, 0.5) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 8px !important;
-      }
-
-      .pnlm-zoom-controls {
-        display: none !important;
-      }
+      input[type="range"] { -webkit-appearance: none; appearance: none; background: rgba(255, 255, 255, 0.25); border-radius: 9999px; outline: none; }
+      input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #ffffff; cursor: pointer !important; box-shadow: 0 0 8px rgba(0, 0, 0, 0.5); transition: transform 0.15s ease, background-color 0.15s ease; }
+      input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); background: #ffffff; }
+      input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #ffffff; border: none; cursor: pointer !important; box-shadow: 0 0 8px rgba(0, 0, 0, 0.5); transition: transform 0.15s ease, background-color 0.15s ease; }
+      input[type="range"]::-moz-range-thumb:hover { transform: scale(1.3); background: #ffffff; }
+      .pnlm-container { background: transparent !important; }
+      .pnlm-load-box { background: rgba(0, 0, 0, 0.5) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 8px !important; }
+      .pnlm-zoom-controls { display: none !important; }
     </style>
 
-    <!-- =========================================================
-         REACT IMPORT MAP
-         ========================================================= -->
     <script type="importmap">
       {
         "imports": {
@@ -255,13 +79,10 @@
       }
     </script>
 
-    <!-- Main CSS -->
     <link rel="stylesheet" href="/index.css" />
   </head>
-
   <body>
     <div id="root"></div>
-
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
