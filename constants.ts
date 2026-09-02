@@ -1,4 +1,3 @@
-
 import { Project } from './types';
 
 export const initialProjects: Project[] = [
@@ -23,6 +22,21 @@ export const initialProjects: Project[] = [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Piano%20house/13.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Piano%20house/14.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Piano%20house/15.jpg',
+    ],
+  },
+  {
+    id: 11,
+    name: 'AlWijha Real Estate - Muscat Office Building',
+    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/01%20-%20FRONT.jpg',
+    theme: 'dark',
+    galleryImages: [
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/01%20-%20FRONT.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/02%20-%20LEFT.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/05%20-%20LEFT%20-3.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/07%20-%20LEFT%20-%206.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/09%20-%20AERIAL.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/11%20-%20PARKING.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/13%20-%20STAIRS.jpg',
     ],
   },
   {
