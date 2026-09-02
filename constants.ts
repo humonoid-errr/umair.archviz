@@ -26,7 +26,7 @@ export const initialProjects: Project[] = [
   },
   {
     id: 11,
-    name: 'AlWijha Real Estate - Muscat Office Building',
+    name: 'AlWijha Real Estate - Muscat Office',
     imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/AlWijha%20Real%20Estate%20-%20Muscat%20Office%20Building%20New%20Changes/01%20-%20FRONT.jpg',
     theme: 'dark',
     galleryImages: [
