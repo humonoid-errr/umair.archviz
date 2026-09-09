@@ -42,14 +42,14 @@ export const initialProjects: Project[] = [
   {
     id: 12,
     name: 'Noor Al Layl Villa',
-    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/1.jpg',
+    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/1.1.jpg',
     theme: 'dark',
     galleryImages: [
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/1.1jpg',
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/2.2jpg',
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/3.3jpg',
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/4.4jpg',
-      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/5.5jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/1.1.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/2.2.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/3.3.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/4.4.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/5.5.jpg',
     ],
   },
   {
