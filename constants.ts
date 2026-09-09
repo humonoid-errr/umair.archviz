@@ -40,6 +40,19 @@ export const initialProjects: Project[] = [
     ],
   },
   {
+    id: 12,
+    name: 'Noor Al Layl Villa',
+    imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/1.jpg',
+    theme: 'dark',
+    galleryImages: [
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/1.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/2.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/3.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/4.jpg',
+      'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Noor%20Al%20Layl%20Villa/5.jpg',
+    ],
+  },
+  {
     id: 2,
     name: 'Mountain Cabin',
     imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Mountain%20Cabin/1.jpg',
@@ -80,7 +93,7 @@ export const initialProjects: Project[] = [
     name: 'Apartment Sanskar',
     imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/1.jpg',
     theme: 'light',
-    is360: true, // Mark this project as having 360 content
+    is360: true,
     galleryImages: [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/1.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/2.jpg',
@@ -91,12 +104,12 @@ export const initialProjects: Project[] = [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/apartment%20sanskar/7.jpg',
     ],
   },
-    {
+  {
     id: 10,
     name: 'Babita Apartment',
     imageUrl: 'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Babita%20Apartment',
     theme: 'light',
-    is360: true, // Mark this project as having 360 content
+    is360: true,
     galleryImages: [
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Babita%20Apartment/1.jpg',
       'https://cdn.jsdelivr.net/gh/humonoid-errr/umair.archviz@main/portfolio/Babita%20Apartment/2.jpg',
