@@ -93,6 +93,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const lastPointerPos = useRef({ x: 0, y: 0 });
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+  const pinchStartDistance = useRef<number | null>(null);
+  const pinchStartZoom = useRef(1);
 
   const pannellumViewerRef = useRef<any>(null);
   const pannellumContainerRef = useRef<HTMLDivElement>(null);
@@ -588,6 +591,78 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
     isDragging.current = false;
   };
 
+  // Mobile-only gesture support for regular fullscreen images:
+  // swipe horizontally to navigate and pinch with two fingers to zoom.
+  const handleImageTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (is360Active) return;
+
+    if (e.touches.length >= 2) {
+      const first = e.touches[0];
+      const second = e.touches[1];
+      pinchStartDistance.current = Math.hypot(
+        second.clientX - first.clientX,
+        second.clientY - first.clientY
+      );
+      pinchStartZoom.current = zoomLevel;
+      touchStartPos.current = null;
+      return;
+    }
+
+    if (e.touches.length === 1) {
+      touchStartPos.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+      pinchStartDistance.current = null;
+    }
+  };
+
+  const handleImageTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (is360Active || e.touches.length < 2) return;
+
+    const startDistance = pinchStartDistance.current;
+    if (startDistance === null || startDistance <= 0) return;
+
+    const first = e.touches[0];
+    const second = e.touches[1];
+    const currentDistance = Math.hypot(
+      second.clientX - first.clientX,
+      second.clientY - first.clientY
+    );
+    const nextZoom = Math.min(
+      3.25,
+      Math.max(1, pinchStartZoom.current * (currentDistance / startDistance))
+    );
+
+    setZoomLevel(nextZoom);
+    if (nextZoom <= 1) setPanPosition({ x: 0, y: 0 });
+  };
+
+  const handleImageTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (is360Active) return;
+
+    // A pinch gesture must never trigger image navigation.
+    if (pinchStartDistance.current !== null) {
+      if (e.touches.length < 2) pinchStartDistance.current = null;
+      touchStartPos.current = null;
+      return;
+    }
+
+    const start = touchStartPos.current;
+    const endTouch = e.changedTouches[0];
+    touchStartPos.current = null;
+    if (!start || !endTouch || zoomLevel > 1) return;
+
+    const deltaX = endTouch.clientX - start.x;
+    const deltaY = endTouch.clientY - start.y;
+    const swipeThreshold = 50;
+
+    if (Math.abs(deltaX) >= swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX < 0) goToNextImage();
+      else goToPreviousImage();
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (fullscreenIndex === null) return;
@@ -807,7 +882,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
             {zoomLevel <= 1 && (
               <button
                 onClick={handlePreviousClick}
-                className={`absolute z-[160] p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''} ${
+                className={`absolute z-[160] p-3 md:p-4 rounded-full bg-black/60 md:bg-black/5 border border-white/30 md:border-0 shadow-lg md:shadow-none hover:bg-black/70 md:hover:bg-black/20 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-sm md:backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''} ${
                     forcedOrientation === 'landscape'
                       ? 'top-4 left-1/2 -translate-x-1/2 rotate-90'
                       : 'left-2 md:left-8 top-1/2 -translate-y-1/2'
@@ -852,6 +927,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                                 onPointerMove={isActive ? handlePointerMove : undefined}
                                 onPointerUp={isActive ? handlePointerUp : undefined}
                                 onPointerLeave={isActive ? handlePointerUp : undefined}
+                                onTouchStart={isActive && !is360 ? handleImageTouchStart : undefined}
+                                onTouchMove={isActive && !is360 ? handleImageTouchMove : undefined}
+                                onTouchEnd={isActive && !is360 ? handleImageTouchEnd : undefined}
                                 style={{ cursor: isActive && zoomLevel > 1 && !is360Active ? 'grab' : 'default' }}
                             >
                                 <div className="max-w-full max-h-full w-full h-full flex items-center justify-center relative bg-gray-50">
@@ -919,7 +997,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
             {zoomLevel <= 1 && (
               <button
                 onClick={handleNextClick}
-                className={`absolute z-[160] p-2 md:p-4 rounded-full bg-black/10 md:bg-black/5 hover:bg-black/20 transition-all duration-300 opacity-60 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-[1px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''} ${
+                className={`absolute z-[160] p-3 md:p-4 rounded-full bg-black/60 md:bg-black/5 border border-white/30 md:border-0 shadow-lg md:shadow-none hover:bg-black/70 md:hover:bg-black/20 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-sm md:backdrop-blur-[1px] ${activeFullscreenArrow === 'right' ? 'md:opacity-100' : ''} ${
                     forcedOrientation === 'landscape'
                       ? 'bottom-4 left-1/2 -translate-x-1/2 rotate-90'
                       : 'right-2 md:right-8 top-1/2 -translate-y-1/2'
@@ -930,7 +1008,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
             )}
             
             <div 
-              className={`absolute z-[160] flex items-center justify-center transition-all duration-500 ${
+              className={`absolute z-[160] hidden md:flex items-center justify-center transition-all duration-500 ${
                   forcedOrientation === 'landscape'
                     ? 'right-[-5rem] top-1/2 -translate-y-1/2 rotate-90 origin-center' 
                     : 'bottom-8 left-1/2 -translate-x-1/2'
