@@ -837,6 +837,46 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
           onAnimationEnd={() => setIsOverlayAnimationDone(true)}
           onClick={closeFullscreen}
         >
+          <div className={`absolute z-[160] transition-all duration-500 ${
+            forcedOrientation === 'landscape' 
+              ? 'left-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 items-center origin-center' 
+              : 'top-4 right-4 md:top-6 md:right-6 flex items-center gap-2'
+          }`}>
+             {/* CONDITIONAL ROTATE BUTTON: Only show if NOT 360 */}
+             {!isCurrentIndex360(fullscreenIndex) && (
+                 <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setForcedOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait');
+                      }}
+                      className={`lg:hidden text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all border border-black/5 active:scale-90 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : 'flex items-center gap-2 px-3'}`}
+                      title="Toggle Orientation"
+                    >
+                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="7" y="3" width="10" height="18" rx="2" />
+                          <circle cx="12" cy="18" r="0.5" fill="currentColor" />
+                       </svg>
+                       {forcedOrientation !== 'landscape' && (
+                           <span className="text-[10px] uppercase font-bold tracking-widest lg:hidden">Rotate</span>
+                       )}
+                 </button>
+             )}
+
+             <button 
+                onClick={(e) => { e.stopPropagation(); toggleBrowserFullscreen(); }}
+                className={`text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all hover:scale-110 active:scale-90 border border-black/5 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : ''}`}
+                title="Toggle Display Fullscreen"
+              >
+                {isBrowserFullscreen ? <MinimizeIcon className="w-5 h-5" /> : <FullscreenIcon className="w-5 h-5" />}
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); closeFullscreen(); }}
+                className={`text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all hover:scale-110 active:scale-90 border border-black/5 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : ''}`}
+                aria-label="Close Gallery"
+              >
+                <CloseIcon className="w-5 h-5" />
+              </button>
+          </div>
           
           <div className="relative w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
             {zoomLevel <= 1 && (
