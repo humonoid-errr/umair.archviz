@@ -661,8 +661,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
     const deltaY = endTouch.clientY - start.y;
     const swipeThreshold = 50;
 
-    if (Math.abs(deltaX) >= swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (deltaX < 0) goToNextImage();
+    // In the manually rotated landscape view, the image's horizontal axis
+    // maps to the screen's vertical axis.
+    const swipeDelta = forcedOrientation === 'landscape' ? deltaY : deltaX;
+    const crossDelta = forcedOrientation === 'landscape' ? deltaX : deltaY;
+
+    if (Math.abs(swipeDelta) >= swipeThreshold && Math.abs(swipeDelta) > Math.abs(crossDelta)) {
+      if (swipeDelta < 0) goToNextImage();
       else goToPreviousImage();
     }
   };
@@ -841,11 +846,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
           onAnimationEnd={() => setIsOverlayAnimationDone(true)}
           onClick={closeFullscreen}
         >
-          <div className={`absolute z-[160] transition-all duration-500 ${
-            forcedOrientation === 'landscape' 
-              ? 'left-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 items-center origin-center' 
-              : 'top-4 right-4 md:top-6 md:right-6 flex items-center gap-2'
-          }`}>
+          <div className="absolute z-[160] top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
              {/* CONDITIONAL ROTATE BUTTON: Only show if NOT 360 */}
              {!isCurrentIndex360(fullscreenIndex) && (
                  <button 
@@ -853,7 +854,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                         e.stopPropagation(); 
                         setForcedOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait');
                       }}
-                      className={`lg:hidden text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all border border-black/5 active:scale-90 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : 'flex items-center gap-2 px-3'}`}
+                      className="lg:hidden text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all border border-black/5 active:scale-90 shadow-sm flex items-center gap-2 px-3"
                       title="Toggle Orientation"
                     >
                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -868,7 +869,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
 
              <button 
                 onClick={(e) => { e.stopPropagation(); toggleBrowserFullscreen(); }}
-                className={`text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all hover:scale-110 active:scale-90 border border-black/5 shadow-sm ${forcedOrientation === 'landscape' ? 'rotate-90' : ''}`}
+                className="text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all hover:scale-110 active:scale-90 border border-black/5 shadow-sm"
                 title="Toggle Display Fullscreen"
               >
                 {isBrowserFullscreen ? <MinimizeIcon className="w-5 h-5" /> : <FullscreenIcon className="w-5 h-5" />}
