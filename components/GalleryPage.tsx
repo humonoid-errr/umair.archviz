@@ -882,7 +882,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
             {zoomLevel <= 1 && (
               <button
                 onClick={handlePreviousClick}
-                className={`absolute z-[160] p-3 md:p-4 rounded-full bg-black/60 md:bg-black/5 border border-white/30 md:border-0 shadow-lg md:shadow-none hover:bg-black/70 md:hover:bg-black/20 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-sm md:backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''} ${
+                className={`hidden md:block absolute z-[160] p-3 md:p-4 rounded-full bg-black/60 md:bg-black/5 border border-white/30 md:border-0 shadow-lg md:shadow-none hover:bg-black/70 md:hover:bg-black/20 transition-all duration-300 opacity-100 md:opacity-0 hover:scale-110 active:scale-95 backdrop-blur-sm md:backdrop-blur-[1px] ${activeFullscreenArrow === 'left' ? 'md:opacity-100' : ''} ${
                     forcedOrientation === 'landscape'
                       ? 'top-4 left-1/2 -translate-x-1/2 rotate-90'
                       : 'left-2 md:left-8 top-1/2 -translate-y-1/2'
