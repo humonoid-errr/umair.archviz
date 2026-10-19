@@ -94,6 +94,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
   const isDragging = useRef(false);
   const lastPointerPos = useRef({ x: 0, y: 0 });
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+  const lastTouchPos = useRef<{ x: number; y: number } | null>(null);
   const pinchStartDistance = useRef<number | null>(null);
   const pinchStartZoom = useRef(1);
 
@@ -606,21 +607,38 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
       );
       pinchStartZoom.current = zoomLevel;
       touchStartPos.current = null;
+      lastTouchPos.current = null;
       return;
     }
 
     if (e.touches.length === 1) {
-      touchStartPos.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-      };
+      const point = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      touchStartPos.current = point;
+      lastTouchPos.current = point;
       pinchStartDistance.current = null;
     }
   };
 
   const handleImageTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (is360Active) return;
-    if (e.touches.length >= 2 && e.cancelable) e.preventDefault();
+    if (e.cancelable) e.preventDefault();
+
+    if (e.touches.length === 1 && zoomLevel > 1) {
+      const point = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      const last = lastTouchPos.current;
+      if (last) {
+        const screenDeltaX = point.x - last.x;
+        const screenDeltaY = point.y - last.y;
+        // The content wrapper is rotated 90° in landscape, so convert
+        // screen-space finger movement into the image's local coordinates.
+        const deltaX = forcedOrientation === 'landscape' ? screenDeltaY : screenDeltaX;
+        const deltaY = forcedOrientation === 'landscape' ? -screenDeltaX : screenDeltaY;
+        setPanPosition(prev => ({ x: prev.x + deltaX, y: prev.y + deltaY }));
+      }
+      lastTouchPos.current = point;
+      return;
+    }
+
     if (e.touches.length < 2) return;
 
     const startDistance = pinchStartDistance.current;
@@ -649,12 +667,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
     if (pinchStartDistance.current !== null) {
       if (e.touches.length < 2) pinchStartDistance.current = null;
       touchStartPos.current = null;
+      lastTouchPos.current = null;
       return;
     }
 
     const start = touchStartPos.current;
     const endTouch = e.changedTouches[0];
     touchStartPos.current = null;
+    lastTouchPos.current = null;
     if (!start || !endTouch || zoomLevel > 1) return;
 
     const deltaX = endTouch.clientX - start.x;
