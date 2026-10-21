@@ -249,24 +249,20 @@ const App: React.FC = () => {
   }, [allHeroImages.length, currentHeroImageIndex]);
 
   useEffect(() => {
-    if (
-      currentPage !== 'home' ||
-      allHeroImages.length === 0 ||
-      isZenMode ||
-      showIntro
-    ) {
+    if (currentPage !== 'home' || allHeroImages.length < 2 || showIntro) {
       return;
     }
 
-    const imageInterval = setInterval(handleNextHeroImage, 6000);
-    return () => clearInterval(imageInterval);
-  }, [
-    currentPage,
-    handleNextHeroImage,
-    allHeroImages.length,
-    isZenMode,
-    showIntro,
-  ]);
+    // Keep the slideshow running in Zen Mode too. Use a functional state
+    // update so the interval always advances from the latest image index.
+    const imageInterval = window.setInterval(() => {
+      setCurrentHeroImageIndex((currentIndex) =>
+        (currentIndex + 1) % allHeroImages.length
+      );
+    }, 6000);
+
+    return () => window.clearInterval(imageInterval);
+  }, [currentPage, allHeroImages.length, showIntro]);
 
   /* =========================================================
      PROJECT NAVIGATION
