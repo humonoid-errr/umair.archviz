@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
@@ -141,11 +141,11 @@ const App: React.FC = () => {
 
   /* =========================================================
      HERO IMAGES
-     Only project cover images are used for the hero rotation.
-     Gallery images are loaded only when the project is opened.
+     Desktop uses landscape images from all project galleries.
+     Mobile keeps the existing cover-image pool.
      ========================================================= */
 
-  const allHeroImages: RandomImage[] = useMemo(() => {
+  const mobileHeroImages: RandomImage[] = useMemo(() => {
     return projects
       .filter((project) => !project.is360)
       .map((project) => ({
@@ -155,17 +155,104 @@ const App: React.FC = () => {
       .filter((img) => !isImageUrl360(img.imageUrl));
   }, [projects]);
 
-  const [currentHeroImageIndex, setCurrentHeroImageIndex] = useState(() => {
-    return allHeroImages.length > 0
-      ? Math.floor(Math.random() * allHeroImages.length)
-      : 0;
-  });
+  const [isDesktopViewport, setIsDesktopViewport] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 768
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktopViewport(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const desktopImageCandidates: RandomImage[] = useMemo(() => {
+    const seen = new Set<string>();
+    return projects
+      .filter((project) => !project.is360)
+      .flatMap((project) =>
+        (project.galleryImages?.length ? project.galleryImages : [project.imageUrl]).map(
+          (imageUrl) => ({ imageUrl, projectName: project.name })
+        )
+      )
+      .filter((img) => {
+        if (!img.imageUrl || isImageUrl360(img.imageUrl) || seen.has(img.imageUrl)) return false;
+        seen.add(img.imageUrl);
+        return true;
+      });
+  }, [projects]);
+
+  const [desktopLandscapeImages, setDesktopLandscapeImages] = useState<RandomImage[]>([]);
+
+  useEffect(() => {
+    if (!isDesktopViewport || desktopImageCandidates.length === 0) return;
+
+    let cancelled = false;
+    Promise.all(
+      desktopImageCandidates.map(
+        (candidate) =>
+          new Promise<RandomImage | null>((resolve) => {
+            const probe = new Image();
+            probe.onload = () => {
+              resolve(probe.naturalWidth > probe.naturalHeight ? candidate : null);
+            };
+            probe.onerror = () => resolve(null);
+            probe.src = getOptimizedImage(candidate.imageUrl, 80, 70, false);
+          })
+      )
+    ).then((results) => {
+      if (!cancelled) {
+        setDesktopLandscapeImages(results.filter((image): image is RandomImage => image !== null));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isDesktopViewport, desktopImageCandidates]);
+
+  // Do not fall back to portrait-capable cover images on desktop while
+  // landscape dimensions are being checked.
+  const allHeroImages = isDesktopViewport
+    ? desktopLandscapeImages
+    : mobileHeroImages;
+
+  const [currentHeroImageIndex, setCurrentHeroImageIndex] = useState(0);
+  const remainingImageIndexes = useRef<number[]>([]);
+  const lastImagePoolKey = useRef('');
+
+  const shuffleIndexes = (length: number, excludeIndex = -1) => {
+    const indexes = Array.from({ length }, (_, index) => index)
+      .filter((index) => index !== excludeIndex);
+    for (let i = indexes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indexes[i], indexes[j]] = [indexes[j], indexes[i]];
+    }
+    return indexes;
+  };
+
+  useEffect(() => {
+    const poolKey = allHeroImages.map((image) => image.imageUrl).join('|');
+    if (!poolKey || poolKey === lastImagePoolKey.current) return;
+
+    lastImagePoolKey.current = poolKey;
+    const initialIndex = Math.floor(Math.random() * allHeroImages.length);
+    setCurrentHeroImageIndex(initialIndex);
+    remainingImageIndexes.current = shuffleIndexes(allHeroImages.length, initialIndex);
+  }, [allHeroImages]);
+
+  const chooseNextHeroImage = useCallback(() => {
+    if (allHeroImages.length < 2) return;
+
+    if (remainingImageIndexes.current.length === 0) {
+      remainingImageIndexes.current = shuffleIndexes(allHeroImages.length, currentHeroImageIndex);
+    }
+
+    const nextIndex = remainingImageIndexes.current.pop();
+    if (nextIndex !== undefined) setCurrentHeroImageIndex(nextIndex);
+  }, [allHeroImages, currentHeroImageIndex]);
 
   /* =========================================================
      HERO IMAGE PRELOADING
-     Only preload the current hero image. The next image is
-     warmed after the intro finishes, without downloading a
-     batch of five large renders during the initial load.
      ========================================================= */
 
   useEffect(() => {
@@ -187,8 +274,9 @@ const App: React.FC = () => {
   useEffect(() => {
     if (showIntro || allHeroImages.length < 2) return;
 
-    const nextIndex =
-      (currentHeroImageIndex + 1) % allHeroImages.length;
+    const nextIndex = remainingImageIndexes.current.length > 0
+      ? remainingImageIndexes.current[remainingImageIndexes.current.length - 1]
+      : shuffleIndexes(allHeroImages.length, currentHeroImageIndex)[0];
     const next = allHeroImages[nextIndex];
     if (!next) return;
 
@@ -201,7 +289,7 @@ const App: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [showIntro, allHeroImages, currentHeroImageIndex]);
 
-  /* =========================================================
+    /* =========================================================
      CONTENT PROTECTION
      ========================================================= */
 
@@ -239,14 +327,7 @@ const App: React.FC = () => {
      HERO NAVIGATION
      ========================================================= */
 
-  const handleNextHeroImage = useCallback(() => {
-    if (allHeroImages.length === 0) return;
-
-    const nextIndex =
-      (currentHeroImageIndex + 1) % allHeroImages.length;
-
-    setCurrentHeroImageIndex(nextIndex);
-  }, [allHeroImages.length, currentHeroImageIndex]);
+  const handleNextHeroImage = chooseNextHeroImage;
 
   useEffect(() => {
     if (currentPage !== 'home' || allHeroImages.length < 2 || showIntro) {
@@ -255,14 +336,10 @@ const App: React.FC = () => {
 
     // Keep the slideshow running in Zen Mode too. Use a functional state
     // update so the interval always advances from the latest image index.
-    const imageInterval = window.setInterval(() => {
-      setCurrentHeroImageIndex((currentIndex) =>
-        (currentIndex + 1) % allHeroImages.length
-      );
-    }, 6000);
+    const imageInterval = window.setInterval(handleNextHeroImage, 6000);
 
     return () => window.clearInterval(imageInterval);
-  }, [currentPage, allHeroImages.length, showIntro]);
+  }, [currentPage, allHeroImages.length, showIntro, handleNextHeroImage]);
 
   /* =========================================================
      PROJECT NAVIGATION
