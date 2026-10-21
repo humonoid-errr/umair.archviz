@@ -1035,7 +1035,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
             )}
             
             <div 
-              className={`absolute z-[160] hidden md:flex items-center justify-center transition-all duration-500 ${
+              className={`absolute z-[160] hidden lg:flex items-center justify-center transition-all duration-500 ${
                   forcedOrientation === 'landscape'
                     ? 'right-[-5rem] top-1/2 -translate-y-1/2 rotate-90 origin-center' 
                     : 'bottom-8 left-1/2 -translate-x-1/2'
