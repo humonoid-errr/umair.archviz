@@ -25,12 +25,13 @@ const ProgressiveImage: React.FC<{
   alt: string;
   className?: string;
   style?: React.CSSProperties;
+  imageStyle?: React.CSSProperties;
   loading?: "eager" | "lazy";
   draggable?: boolean;
   onContextMenu?: (e: React.MouseEvent) => void;
   onLoad?: () => void;
   isProject360?: boolean;
-}> = ({ src, alt, className, style, loading = "lazy", draggable, onContextMenu, onLoad, isProject360 }) => {
+}> = ({ src, alt, className, style, imageStyle, loading = "lazy", draggable, onContextMenu, onLoad, isProject360 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   
   const is360 = isProject360 || isImageUrl360(src);
@@ -63,6 +64,7 @@ const ProgressiveImage: React.FC<{
         src={fullSrc}
         alt={alt}
         className={`${className} relative z-10 transition-opacity duration-500 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        style={imageStyle}
         loading={loading}
         decoding="async"
         draggable={draggable}
@@ -868,7 +870,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
         >
           <div className="absolute z-[160] top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
              {/* CONDITIONAL ROTATE BUTTON: Only show if NOT 360 */}
-             {!isCurrentIndex360(fullscreenIndex) && (
+             {false && !isCurrentIndex360(fullscreenIndex) && (
                  <button 
                       onClick={(e) => { 
                         e.stopPropagation(); 
@@ -889,7 +891,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
 
              <button 
                 onClick={(e) => { e.stopPropagation(); toggleBrowserFullscreen(); }}
-                className="text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all hover:scale-110 active:scale-90 border border-black/5 shadow-sm"
+                className="hidden lg:inline-flex text-gray-800 bg-white/80 backdrop-blur-md p-2.5 rounded-full hover:bg-white transition-all hover:scale-110 active:scale-90 border border-black/5 shadow-sm"
                 title="Toggle Display Fullscreen"
               >
                 {isBrowserFullscreen ? <MinimizeIcon className="w-5 h-5" /> : <FullscreenIcon className="w-5 h-5" />}
@@ -1003,7 +1005,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ project, onFullscreenChange }
                                             draggable={false}
                                             onContextMenu={(e) => e.preventDefault()}
                                             className={`max-w-full max-h-full object-contain shadow-2xl transition-transform duration-500 ease-in-out`}
-                                            style={isActive ? {
+                                            imageStyle={isActive ? {
                                                 transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
                                                 transition: isDragging.current ? 'none' : 'transform 0.3s ease-out',
                                                 transformOrigin: 'center center'
